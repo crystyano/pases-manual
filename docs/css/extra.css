@@ -1,0 +1,57 @@
+/* PASES — identidade visual do manual */
+
+:root {
+  --mases-accent: #6d4fc4;
+}
+
+/* Badges de status: EXISTE / PLANEJADO / PROPOSTO / A CONFIRMAR */
+.badge {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: 0.8em;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.badge-existe      { background: #1b7a3d; color: #fff; }
+.badge-planejado   { background: #1e6fb8; color: #fff; }
+.badge-proposto    { background: #8a6d1a; color: #fff; }
+.badge-confirmar   { background: #a33b3b; color: #fff; }
+.badge-stub        { background: #666;    color: #fff; }
+
+/* Quadro de ADR */
+.adr {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 4px solid var(--mases-accent);
+  border-radius: 4px;
+  padding: 0.9em 1.2em;
+  margin: 1.4em 0;
+  background: var(--md-code-bg-color);
+}
+.adr h4 { margin-top: 0.2em; }
+
+/* Diagramas centralizados */
+div.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.4em 0;
+}
+
+/* Tabelas ocupando a largura toda */
+.md-typeset table:not([class]) {
+  display: table;
+  width: 100%;
+}
+
+/* Frase de filosofia em destaque */
+.filosofia {
+  font-size: 1.05em;
+  font-style: italic;
+  border-left: 4px solid var(--mases-accent);
+  padding: 0.8em 1.2em;
+  margin: 1.6em 0;
+  background: var(--md-code-bg-color);
+  border-radius: 4px;
+}

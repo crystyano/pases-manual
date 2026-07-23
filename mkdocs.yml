@@ -1,0 +1,102 @@
+site_name: PASES — Protustech AI Software Engineering Station
+site_description: Manual de Arquitetura, Implantação e Operação da Plataforma de Engenharia de Software Assistida por IA da Protustech
+site_author: Protustech
+use_directory_urls: false
+
+theme:
+  name: material
+  language: pt-BR
+  font: false
+  logo: img/logo.svg
+  favicon: img/logo.svg
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: deep purple
+      toggle:
+        icon: material/weather-sunny
+        name: Mudar para modo claro
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: deep purple
+      toggle:
+        icon: material/weather-night
+        name: Mudar para modo escuro
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
+
+extra_css:
+  - css/extra.css
+
+extra_javascript:
+  - js/mermaid.min.js
+  - js/mermaid-init.js
+
+plugins:
+  - search:
+      lang: pt
+
+extra:
+  generator: false
+
+copyright: Protustech — Manual vivo da plataforma. Atualize a cada mudança de arquitetura.
+
+nav:
+  - Home: index.md
+  - 1. Filosofia: 01-filosofia.md
+  - 2. Arquitetura: 02-arquitetura.md
+  - 3. Hardware: 03-hardware.md
+  - 4. BIOS: 04-bios.md
+  - 5. Ubuntu: 05-ubuntu.md
+  - 6. Infraestrutura: 06-infraestrutura.md
+  - 7. Desenvolvimento: 07-desenvolvimento.md
+  - 8. Inteligência Artificial: 08-inteligencia-artificial.md
+  - 9. Agentes: 09-agentes.md
+  - 10. Banco de Conhecimento: 10-banco-de-conhecimento.md
+  - 11. Automações: 11-automacoes.md
+  - 12. Monitoramento: 12-monitoramento.md
+  - 13. Segurança: 13-seguranca.md
+  - 14. Backup: 14-backup.md
+  - 15. Roadmap: 15-roadmap.md
+  - 16. Apêndices:
+      - 16-apendices/index.md
+      - ADRs — Registros de Decisão: 16-apendices/adrs.md
+      - Glossário: 16-apendices/glossario.md
+      - Histórico de Revisões: 16-apendices/historico.md
