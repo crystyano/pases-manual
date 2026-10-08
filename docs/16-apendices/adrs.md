@@ -160,3 +160,53 @@ O volume crítico é pequeno (~100–200 GB; modelos de IA e SO ficam fora por s
 
 ### Quando revisar
 **Gatilho objetivo:** se a janela de backup noturna estourar ou falhar com frequência (alerta do Cap. 12), migrar o destino para Backblaze B2 — plano B já nomeado no Capítulo 14.
+
+---
+
+## ADR-007 — ComfyUI como plataforma de geração de imagem e vídeo, com Z-Image-Turbo e Wan 2.2 5B {#adr-007}
+
+**Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-08
+
+### Objetivo
+Dar à estação a capacidade de gerar imagens e vídeos localmente (material de produto, mockups, protótipos visuais), sem depender de serviços pagos por geração e sem enviar material dos produtos para fora da máquina — respeitando o teto de hardware (uma GPU de 16 GB) e o limite de energia do nobreak (600 W).
+
+### Alternativas avaliadas
+**Quanto à plataforma:** outras interfaces locais de geração **não foram avaliadas** — a decisão se apoiou no fato de o **ComfyUI** ter suporte nativo e templates oficiais para todos os modelos considerados (LTX, Wan, MiniMax H3, FLUX, Z-Image). Ele não é um modelo, e sim o motor que os executa. Se uma alternativa vier a ser cogitada, este ADR deve ser reaberto.
+
+**Quanto aos modelos** (levantamento de 07/10/2026, a partir de fontes secundárias com requisitos de VRAM divergentes):
+
+- **LTX 2.5** — caminho oficial pede 32 GB de VRAM; em 16 GB só por quantizações GGUF da comunidade, com perda de qualidade e velocidade. Descartado como primeira escolha.
+- **MiniMax H3** (33B, pesos abertos desde 03/08/2026) — versão aberta limitada a 768p, upscaler de 2K só via API, e uma fonte relata restrição geográfica de licença (não confirmada). Descartado por ora; relida a licença, pode voltar.
+- **FLUX.2 [dev]** — 24 GB ou mais e licença não comercial. Descartado.
+- **Wan 2.2 A14B** — melhor movimento, mas apertado em 16 GB e sem áudio. Reservado para depois.
+- **LTX-2.3 (FP8)** — vídeo com áudio e cabe em 16 GB, porém com termos comerciais a ler. Reservado para a segunda rodada.
+
+### Decisão
+Adotar o **ComfyUI** (instalação nativa em `/srv/pases/comfyui`, venv Python 3.12, PyTorch cu130), servido **somente em `127.0.0.1:8188`**, fixo na **RTX 5060 Ti**, como serviço systemd de usuário. Primeira rodada de modelos, ambos **Apache 2.0**:
+
+- **Z-Image-Turbo** (imagem, bf16);
+- **Wan 2.2 TI2V-5B** (vídeo, fp16), com codificador de texto em fp8.
+
+Os modelos ficam em `/dados/modelos/comfyui/` e a saída em `/scratch/comfyui/output/`. Detalhes e benchmarks no [Capítulo 8A](../08a-imagem-video.md).
+
+### Justificativa
+- **Cabe no hardware:** os dois modelos rodaram na 5060 Ti sem falhar, inclusive o vídeo de 5 s em 720p (9 min 12 s), com pico de 75 °C e ~165 W somados das duas GPUs.
+- **Licença limpa:** Apache 2.0 em ambos, sem aceite de termos nem restrição comercial identificada.
+- **Instalação nativa, não em container**, pelo mesmo motivo do Ollama ([Cap. 6.1](../06-infraestrutura.md)): acesso direto às GPUs com o mínimo de camadas.
+- **Sem login ⇒ sem exposição:** o ComfyUI não tem autenticação; por isso o bind em `127.0.0.1`.
+- **Começar pequeno:** dois modelos validados antes de acumular um catálogo — o ecossistema muda em meses, e cada modelo extra custa dezenas de GB de disco.
+
+### Consequências e riscos
+- **Convivência com o Ollama:** o Devstral ocupa ~11 GB da mesma GPU; é preciso descarregá-lo (`ollama stop`) antes de gerar vídeo. Isso é uma regra de operação, não automatizada.
+- **VRAM no limite em 720p:** o teste de 1280×704 usou 15,8 GB dos 15,85 GB; funcionou por offload para RAM, mas é a fronteira do hardware.
+- **Energia:** uma geração por vez; gerações paralelas foram a causa do alarme do nobreak em 22/07/2026.
+- **Sem benchmark padronizado ainda:** a qualidade foi avaliada visualmente (1 imagem e 3 quadros de vídeo). Falta uma suíte fixa para imagem/vídeo, equivalente ao PASES-Bench.
+- **Disco:** 34 GB de modelos já instalados; a segunda rodada pode somar mais dezenas de GB e reabre a discussão do NVMe dedicado a IA ([Cap. 3.4](../03-hardware.md)).
+- **Versionamento:** a pasta `comfyui/` aparece não rastreada no `pases-infra`; é preciso ignorá-la e versionar só a definição ([Cap. 8A.7](../08a-imagem-video.md)).
+- **Serviço de usuário:** sem `enable-linger`, o serviço só sobe após o login.
+
+### Quando revisar
+- **Segunda rodada de modelos:** se houver caso de uso real que Z-Image/Wan 5B não atenda (texto em imagem, áudio no vídeo, movimento complexo) — reavaliar LTX-2.3, Qwen-Image, FLUX.2 klein ou Wan A14B, com a suíte de benchmark criada antes.
+- **Upgrade de GPU** (seção 3.4 do [Cap. 3](../03-hardware.md)): o teto de 16 GB é o principal limitador; mais VRAM reabre LTX 2.5 completo e FLUX.2 [dev].
+- **Necessidade de acesso por outras máquinas ou pelos produtos:** exige proxy com autenticação ou integração via AI Gateway ([ADR-004](#adr-004)), e reabre a decisão de bind em `127.0.0.1`.
+- **Mudança de licença** de qualquer modelo instalado, ou aparecimento de um modelo aberto claramente superior no mesmo orçamento de VRAM.

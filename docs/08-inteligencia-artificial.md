@@ -1,6 +1,6 @@
 # 8. Inteligência Artificial
 
-Este capítulo documenta a camada de IA da estação: modelos locais, o papel do Claude e, futuramente, o AI Gateway.
+Este capítulo documenta a camada de IA da estação: modelos locais, o papel do Claude e, futuramente, o AI Gateway. A geração de **imagem e vídeo** (ComfyUI) está no [Capítulo 8A](08a-imagem-video.md).
 
 ## 8.1 Seleção inicial de modelos locais <span class="badge badge-planejado">Planejado — definido em 21/07/2026</span>
 

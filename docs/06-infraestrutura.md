@@ -16,6 +16,7 @@ Este capítulo documenta a camada de serviços da estação: containers, bancos,
 ├── core/                    ← stack base
 │   ├── docker-compose.yml   ← PostgreSQL + Redis
 │   └── .env                 ← senhas (NUNCA versionado — entra no backup criptografado)
+├── comfyui/                 ← ComfyUI nativo (Cap. 8A) — clone + .venv; NÃO versionar inteiro
 ├── monitoring/              ← futura stack do Cap. 12 (Prometheus + Grafana)
 ├── gateway/                 ← futura stack do Cap. 8 (AI Gateway)
 ├── scripts/                 ← backup diário, manutenção (Cap. 11 e 14)

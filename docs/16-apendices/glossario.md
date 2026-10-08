@@ -5,6 +5,7 @@
 | **ADR** | *Architecture Decision Record* — registro formal de uma decisão de arquitetura, com contexto, alternativas e gatilho de revisão. |
 | **AI Gateway** | Serviço interno que expõe uma interface única de IA aos projetos e roteia cada pedido para o modelo adequado. |
 | **AI Supervisor** | Orquestrador que decide quais IAs e ferramentas participam de cada tarefa (nome definitivo a batizar). |
+| **ComfyUI** | Interface e motor de execução, em grafo de nós, para modelos de imagem e vídeo. Não é um modelo — carrega os arquivos de modelo (Capítulo 8A). |
 | **Embedding** | Representação numérica (vetor) de um texto, usada para busca por similaridade no RAG. |
 | **EXPO** | Perfil de overclock de memória da AMD (equivalente ao XMP da Intel). |
 | **HWE** | *Hardware Enablement* — kernels e drivers mais novos disponibilizados no Ubuntu LTS para suportar hardware recente. |
@@ -22,3 +23,5 @@
 | **Stub** | Capítulo com estrutura e escopo definidos, mas conteúdo ainda não escrito. |
 | **Supabase** | Serviço de PostgreSQL gerenciado na nuvem. Hospeda o banco de produção do Moventus (organização Protustech). |
 | **VRAM** | Memória da GPU — o recurso que determina quais modelos locais a estação consegue rodar. |
+| **Wan 2.2 TI2V-5B** | Modelo de vídeo aberto (Apache 2.0) de 5 bilhões de parâmetros, texto e imagem para vídeo. Instalado na estação (Capítulo 8A). |
+| **Z-Image-Turbo** | Modelo de imagem aberto (Apache 2.0) de 6 bilhões de parâmetros, destilado para 8 passos. Instalado na estação (Capítulo 8A). |

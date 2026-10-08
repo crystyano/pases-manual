@@ -17,6 +17,7 @@ Este é o **manual vivo** da plataforma de engenharia de software assistida por 
 | Ubuntu instalado | <span class="badge badge-existe">Existe</span> — 26.04 LTS, kernel 7.0, driver NVIDIA OK |
 | Infraestrutura (Docker · PostgreSQL 17 · Redis 7) | <span class="badge badge-existe">Existe</span> — stack core desde 21/07/2026 |
 | Modelos locais (Ollama · Devstral Small 2 · Qwen3-VL) | <span class="badge badge-existe">Existe</span> — desde 21/07/2026 |
+| Geração de imagem e vídeo (ComfyUI · Z-Image-Turbo · Wan 2.2 5B) | <span class="badge badge-existe">Existe</span> — desde 08/10/2026 |
 | Camada de IA (Gateway, RAG, agentes) | <span class="badge badge-proposto">Proposto</span> |
 
 !!! info "Convenção de status usada em todo o manual"
@@ -40,6 +41,7 @@ O manual segue a arquitetura em camadas da própria plataforma: começa pela **f
 | [6. Infraestrutura](06-infraestrutura.md) | Docker, PostgreSQL, Redis, rede | <span class="badge badge-existe">Núcleo no ar</span> |
 | [7. Desenvolvimento](07-desenvolvimento.md) | Padrões, branches, commits, versionamento | <span class="badge badge-stub">Stub</span> |
 | [8. Inteligência Artificial](08-inteligencia-artificial.md) | Claude, modelos locais, gateway | <span class="badge badge-planejado">Parcial</span> |
+| [8A. Imagem e Vídeo](08a-imagem-video.md) | ComfyUI, Z-Image-Turbo, Wan 2.2, benchmarks | <span class="badge badge-existe">Núcleo no ar</span> |
 | [9. Agentes](09-agentes.md) | Papéis, especialistas, orquestração | <span class="badge badge-stub">Stub</span> |
 | [10. Banco de Conhecimento](10-banco-de-conhecimento.md) | RAG, embeddings, memória | <span class="badge badge-stub">Stub</span> |
 | [11. Automações](11-automacoes.md) | Scripts, build, deploy, CI/CD | <span class="badge badge-stub">Stub</span> |
