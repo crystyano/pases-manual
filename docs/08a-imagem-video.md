@@ -253,16 +253,19 @@ ffmpeg -i /scratch/comfyui/output/video/teste_wan_720p_00001_.mp4 -vf "select=eq
 
 O ComfyUI não depende de nenhum dos dois para gerar: ele salva o MP4 por conta própria.
 
-## 8A.7 Versionamento e backup <span class="badge badge-confirmar">A confirmar</span>
+## 8A.7 Versionamento e backup <span class="badge badge-existe">Existe — 08/10/2026</span>
 
-!!! danger "Não versionar a pasta `comfyui/` inteira no `pases-infra`"
-    Em 08/10/2026 a pasta `/srv/pases/comfyui/` aparece como **não rastreada** no repositório `pases-infra`. Ela contém o `.venv` (~5 GB) e um clone completo do ComfyUI. Um `git add .` descuidado enviaria tudo isso ao GitHub. A abordagem recomendada, ainda **não aplicada**:
+A pasta `/srv/pases/comfyui/` (clone do ComfyUI + `.venv` de ~5 GB) está no `.gitignore` do `pases-infra`: é **reconstruível** pelo procedimento da seção 8A.4 e não deve ir ao GitHub. O que é **definição** vive em uma pasta rastreada:
 
-    - adicionar `comfyui/` ao `.gitignore` do `pases-infra`;
-    - versionar apenas a **definição**: `comfyui.service` e `extra_model_paths.yaml` (copiando-os para uma pasta rastreada, por exemplo `/srv/pases/comfyui-config/`);
-    - o ComfyUI e o venv são **reconstruíveis** pelo procedimento da seção 8A.4.
+| Arquivo versionado (`/srv/pases/comfyui-config/`) | Usado em (link simbólico apontando para a pasta rastreada) |
+|---|---|
+| `comfyui.service` | `~/.config/systemd/user/comfyui.service` |
+| `extra_model_paths.yaml` | `/srv/pases/comfyui/extra_model_paths.yaml` |
+| `README.md` | Como reinstalar em máquina nova |
 
-**Backup (Cap. 14):** os modelos (34 GB) e os arquivos gerados são **reconstruíveis/descartáveis** — baixar de novo é possível e a saída em `/scratch` é temporária por definição. O que importa guardar são os **workflows** (grafos) que você criar e quiser preservar: exportá-los como JSON e salvá-los em um repositório. A inclusão de `/dados/modelos/comfyui` ou de workflows em alguma classe de dados do Cap. 14 ainda não foi decidida.
+Como os originais são **links simbólicos**, editar qualquer um deles altera o arquivo versionado — não há cópia que possa divergir. Depois de mudar o `.service`, rodar `systemctl --user daemon-reload` e reiniciar o serviço. Validado em 08/10/2026: após a troca por links, o serviço reiniciou e o ComfyUI continuou encontrando os dois modelos.
+
+**Backup (Cap. 14):** os modelos (34 GB) e os arquivos gerados são **reconstruíveis/descartáveis** — baixar de novo é possível e a saída em `/scratch` é temporária por definição. O que importa guardar são os **workflows** (grafos) que você criar e quiser preservar: exportá-los como JSON e salvá-los em um repositório. A inclusão de `/dados/modelos/comfyui` ou de workflows em alguma classe de dados do Cap. 14 ainda não foi decidida <span class="badge badge-confirmar">A confirmar</span>.
 
 ## 8A.8 Alternativas avaliadas e segunda rodada <span class="badge badge-planejado">Planejado</span>
 
@@ -292,7 +295,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | Sobrecarga do nobreak por gerações paralelas | Uma geração por vez; power limit permanente das GPUs ([Cap. 8.6](08-inteligencia-artificial.md)) |
 | ComfyUI sem autenticação | Bind em `127.0.0.1` apenas ([ADR-007](16-apendices/adrs.md#adr-007)) |
 | Instalação sobre `&&` mascarando falha | Lição da seção 8A.4: não usar `comando \| tail && próximo` |
-| `comfyui/` não rastreada no `pases-infra` | Seção 8A.7 |
+| Versionar a pasta `comfyui/` inteira por engano | Ignorada no `.gitignore`; só `comfyui-config/` é versionada (seção 8A.7) |
 | Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; os instalados (Z-Image-Turbo e Wan 2.2) são Apache 2.0 conforme o Hugging Face em 07/10/2026 |
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
@@ -301,4 +304,4 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 - Segunda rodada de modelos (LTX-2.3, Qwen-Image, FLUX.2 klein) após benchmark
 - Workflows do ComfyUI versionados e backup deles ([Cap. 14](14-backup.md))
 - Integração com o AI Gateway ([ADR-004](16-apendices/adrs.md#adr-004)) — hoje o ComfyUI é usado só pela interface web local
-- Confirmar `Linger` e a política de versionamento (seção 8A.7)
+- Confirmar `Linger` (seção 8A.6) e a política de backup dos workflows (seção 8A.7)

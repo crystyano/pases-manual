@@ -202,7 +202,7 @@ Os modelos ficam em `/dados/modelos/comfyui/` e a saída em `/scratch/comfyui/ou
 - **Energia:** uma geração por vez; gerações paralelas foram a causa do alarme do nobreak em 22/07/2026.
 - **Sem benchmark padronizado ainda:** a qualidade foi avaliada visualmente (1 imagem e 3 quadros de vídeo). Falta uma suíte fixa para imagem/vídeo, equivalente ao PASES-Bench.
 - **Disco:** 34 GB de modelos já instalados; a segunda rodada pode somar mais dezenas de GB e reabre a discussão do NVMe dedicado a IA ([Cap. 3.4](../03-hardware.md)).
-- **Versionamento:** a pasta `comfyui/` aparece não rastreada no `pases-infra`; é preciso ignorá-la e versionar só a definição ([Cap. 8A.7](../08a-imagem-video.md)).
+- **Versionamento:** `comfyui/` (clone + venv) é ignorada no `pases-infra`; só a definição (`comfyui.service`, `extra_model_paths.yaml`) é versionada em `comfyui-config/`, com links simbólicos nos locais de uso ([Cap. 8A.7](../08a-imagem-video.md)).
 - **Serviço de usuário:** sem `enable-linger`, o serviço só sobe após o login.
 
 ### Quando revisar
