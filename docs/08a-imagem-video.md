@@ -243,9 +243,15 @@ sudo loginctl enable-linger pases
 loginctl show-user pases -p Linger   # esperado: Linger=yes
 ```
 
-### Ferramentas que não existem na estação
+### Ferramentas de apoio <span class="badge badge-existe">Existe — 08/10/2026</span>
 
-O `ffmpeg` **não está instalado**. O ComfyUI salva MP4 sem ele, mas para extrair quadros ou converter vídeos na linha de comando é preciso `sudo apt install ffmpeg`. Nos testes, os quadros foram extraídos com o PyAV (instalado junto com o ComfyUI).
+Instalados pelo apt em 08/10/2026: **VLC** 3.0.23 (reproduzir os MP4 no gerenciador de arquivos — sem ele o Ubuntu não tinha aplicativo para abrir vídeo) e **ffmpeg** 8.0.1 (extrair quadros, converter e cortar vídeos pela linha de comando). Exemplo, extraindo um quadro do vídeo de teste:
+
+```bash
+ffmpeg -i /scratch/comfyui/output/video/teste_wan_720p_00001_.mp4 -vf "select=eq(n\,60)" -frames:v 1 quadro60.png
+```
+
+O ComfyUI não depende de nenhum dos dois para gerar: ele salva o MP4 por conta própria.
 
 ## 8A.7 Versionamento e backup <span class="badge badge-confirmar">A confirmar</span>
 
