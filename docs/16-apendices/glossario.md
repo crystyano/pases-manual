@@ -20,6 +20,7 @@
 | **PITR** | *Point-In-Time Recovery* — restauração de um banco a um instante específico, via base + logs de transação. |
 | **QLC** | Memória flash com 4 bits por célula: barata e boa em leitura, lenta em escrita sustentada (caso do SSD 870 QVO). |
 | **Quantização** | Compressão de um modelo (ex.: 16 → 4 bits por parâmetro) para caber em menos VRAM, com perda controlada de qualidade. |
+| **Qwen-Image 2.1** | Modelo de imagem aberto da Qwen, forte em texto dentro da imagem. Licença *Qwen Research*: somente avaliação, uso comercial exige licença separada (Capítulo 8A, ADR-009). |
 | **RAG** | *Retrieval-Augmented Generation* — técnica em que a IA consulta uma base de conhecimento antes de responder. |
 | **Stub** | Capítulo com estrutura e escopo definidos, mas conteúdo ainda não escrito. |
 | **Supabase** | Serviço de PostgreSQL gerenciado na nuvem. Hospeda o banco de produção do Moventus (organização Protustech). |

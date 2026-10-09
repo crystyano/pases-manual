@@ -75,6 +75,24 @@ Repositório oficial: `Lightricks/LTX-2.5` (Hugging Face). **Não é Apache 2.0*
     - **Treinar ou destilar** outro modelo para uso comercial exige licença paga.
     - O enquadramento abaixo do limite foi **declarado pelo responsável da Protustech** em 08/10/2026; não foi verificado de forma independente. Reavaliar se a receita do grupo se aproximar de US$ 10 milhões.
 
+### Qwen-Image 2.1 — imagem com texto <span class="badge badge-existe">Existe — 09/10/2026</span> <span class="badge badge-confirmar">Somente avaliação</span>
+
+Repositório: `Comfy-Org/Qwen-Image-2.1` (Hugging Face), público e **sem login**. A licença, porém, **não é Apache**: é a *Qwen Research License* (20/09/2026).
+
+| Arquivo | Tamanho | Pasta (em `/dados/modelos/comfyui/`) |
+|---|---|---|
+| `qwen_image_2.1_int8_convrot.safetensors` | 7,26 GB | `diffusion_models/` |
+| `qwen3vl_8b_int8_convrot.safetensors` | 9,35 GB | `text_encoders/` |
+| `qwen_image_2.1_vae_bf16.safetensors` | 0,68 GB | `vae/` |
+
+**Total: ~17,3 GB** (modelos do ComfyUI somam agora ~91 GB). SHA-256 dos 3 arquivos conferido contra o Hugging Face em 09/10/2026. Não foi baixado o *prompt enhancer* opcional (9,47 GB), que o template oficial deixa desligado.
+
+!!! danger "Licença Qwen Research — uso não comercial"
+    - O uso é permitido **somente para pesquisa ou avaliação** ("Non-Commercial"). **Qualquer uso comercial exige licença separada** da Qwen (`model-business@notice.qwencloud.com`). Usar as imagens geradas em materiais da empresa pode ser considerado uso comercial — em caso de dúvida, perguntar a eles antes.
+    - Se o modelo ou suas saídas forem usados para criar, treinar ou melhorar **outro modelo de IA** distribuído, é preciso exibir "Built with Qwen" / "Improved using Qwen".
+    - A lei aplicável é a da China, com foro em Hangzhou; quebra dos termos obriga a apagar o material.
+    - **Hoje o Qwen-Image 2.1 está instalado apenas para avaliação.** Alternativa **Apache 2.0** (não instalada): Qwen-Image 2512, ~30 GB, mais pesado em 16 GB — ver [ADR-009](16-apendices/adrs.md#adr-009).
+
 ## 8A.4 Instalação — procedimento reproduzível <span class="badge badge-existe">Existe</span>
 
 Registro do que foi feito em 07–08/10/2026. Cada passo pode ser repetido em uma máquina nova.
@@ -219,6 +237,18 @@ O download completo levou cerca de 3 horas nesta rede. Se um `curl` terminar com
     - **O download pode parecer parado e não estar.** O `hf_xet` acumula blocos em memória e grava em rajadas; o tamanho do arquivo `.incomplete` pode ficar parado por minutos. Para saber se há progresso, meça o tráfego do **próprio processo** (`ss -tinp`, bytes recebidos), não só o disco. Reiniciar é seguro (retoma), mas deixa `.incomplete` órfãos em `<pasta>/.cache/huggingface/download/` que podem ser apagados depois de validar os SHA-256.
     - **Cuidado com `pkill -f`:** o padrão casa com a linha de comando do próprio `pkill` e mata a shell. Encerre pelo PID.
 
+**6C. Baixar o Qwen-Image 2.1** (público, sem token). Usar `curl` retomável, **não** o `hf`: depois do LTX o arquivo `~/.cache/huggingface/token` (já revogado) ainda existe, e o `hf` o enviaria — um token inválido pode fazer o Hugging Face recusar até repositórios públicos.
+
+```bash
+B=/dados/modelos/comfyui
+R=https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main
+curl -L -C - --fail -o $B/vae/qwen_image_2.1_vae_bf16.safetensors                        $R/vae/qwen_image_2.1_vae_bf16.safetensors
+curl -L -C - --fail -o $B/text_encoders/qwen3vl_8b_int8_convrot.safetensors              $R/text_encoders/qwen3vl_8b_int8_convrot.safetensors
+curl -L -C - --fail -o $B/diffusion_models/qwen_image_2.1_int8_convrot.safetensors       $R/diffusion_models/qwen_image_2.1_int8_convrot.safetensors
+```
+
+O download levou cerca de 40 min nesta rede. Conferir os SHA-256 contra o publicado no Hugging Face (campo `lfs.oid` da API de árvore do repositório) e reiniciar o ComfyUI.
+
 **7. Reiniciar o serviço** para o ComfyUI indexar os modelos novos:
 
 ```bash
@@ -298,6 +328,31 @@ Template oficial `video_ltx2_5_flf2v`, reproduzido em `bench/ltx.py` (`wf_ltx_fl
 !!! warning "Limites"
     2 sementes por item e 3 quadros por vídeo avaliados; o áudio não foi avaliado. O prompt negativo usado é o curto dos demais testes do LTX, não o do template (que tem termos de uma cena específica de pessoa falando).
 
+### Qwen-Image 2.1 × Z-Image-Turbo — texto em imagens <span class="badge badge-existe">Existe — 09/10/2026</span>
+
+Rodada `2026-10-09_0043_qwen` (Qwen, itens I1–I5, 3 sementes: 15 gerações, **0 falhas**) e `2026-10-09_0048` (I5 com Z-Image, que ainda não tinha esse item), contra a linha de base do Z-Image de 08/10. 1024×1024, uma geração por vez. O Qwen roda com os parâmetros do template oficial: **25 passos**, CFG 1, `euler`, prompt enhancer desligado (o pipeline oficial usa ~40–50 passos; 25 é o padrão do template).
+
+| | Z-Image-Turbo | Qwen-Image 2.1 |
+|---|---|---|
+| Tempo por imagem (mediana) | **12 s** | 18 s |
+| 1ª geração, a frio | 50 s | **22 s** |
+| Pico de VRAM | 15,7 GB | 15,7 GB |
+| Pico de RAM | ~27 GB | ~28,7 GB |
+| Pico de temperatura / potência (2 GPUs) | 76 °C / 169 W | 77 °C / 168 W |
+
+**Texto — leitura do assistente nas folhas de contato (3 sementes por item). A ficha de avaliação humana é a que vale e ainda não foi preenchida.**
+
+| Item | Qwen-Image 2.1 | Z-Image-Turbo |
+|---|---|---|
+| **I2** — etiqueta "PEDIDO 1024 - MOVENTUS" | 3 de 3 corretas | 3 de 3 corretas |
+| **I5** — bloco longo com acentos e símbolos ("ORÇAMENTO Nº 0412", "Armário", "R$ 4.850,00", "úteis") | **3 de 3 com todas as linhas e acentos corretos.** Na semente 101 o "º" parece um símbolo de grau | 2 de 3 corretas. Na semente 101 saiu **"04112"** (dígito a mais) e a folha ganhou formato de folha de árvore |
+| **I3** — mockup de tela de ERP | Títulos e botão certos nas 3 sementes ("Pedidos", "Novo Pedido"), mas **tabelas e menus viram ruído ilegível** | Foto de monitor; **"Pedigos"** errado nas 3 sementes e palavras como "Botor" |
+
+**Conclusão:** para **texto curto a médio e documentos**, o Qwen é mais confiável (especialmente com acentos e números), ao custo de ~50% mais tempo por imagem. Para **interface com texto denso e pequeno** (tabelas de ERP) nenhum dos dois produz uma imagem final aproveitável: o Qwen acerta os títulos e perde o miúdo; o Z-Image erra até os títulos. O Z-Image continua sendo o modelo padrão para imagens sem texto crítico (mais rápido, Apache 2.0). I1 e I4 (composição e fotorrealismo) **não foram avaliados** nesta comparação.
+
+!!! warning "Limites"
+    3 sementes por item e avaliação visual do assistente. O Qwen está sob licença **só para avaliação** (seção 8A.3): estes resultados orientam a decisão de licenciar ou de usar o Qwen-Image 2512 (Apache 2.0), não autorizam uso em produção.
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
@@ -314,9 +369,10 @@ cd /srv/pases/comfyui-config/bench
 /srv/pases/comfyui/.venv/bin/python -I bench.py --dry-run          # valida, não gera
 /srv/pases/comfyui/.venv/bin/python -I bench.py                    # suíte completa (Z-Image + Wan), ~40 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx       # só vídeo + F1/F2, com o LTX 2.5, ~12 min
+/srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen      # só imagens (I1–I5), com o Qwen-Image 2.1, ~5 min
 ```
 
-Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
+Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **I5** bloco de texto longo em português com acentos (adicionado em 09/10/2026) · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
 
 **Linha de base das imagens** (Z-Image-Turbo, 12 gerações, 0 falhas): mediana de **12 s** por imagem 1024², pico de 76 °C e 169 W. A 1ª geração a frio levou 50 s.
 
@@ -401,7 +457,8 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | **LTX-2.3** (FP8) | Mesma família do 2.5, que o superou. Não é necessário instalar. |
 | **LTX 2.5** | **Adotado como modelo de vídeo principal** ([ADR-008](16-apendices/adrs.md#adr-008)). **Correção:** a avaliação de 07/10 dizia que em 16 GB só rodaria por quantizações GGUF da comunidade; na prática, o transformer **oficial** `int8-convrot` (21,5 GB) rodou com offload dinâmico, sem GGUF, a 19 s por vídeo curto. As fontes secundárias estavam desatualizadas. |
 | **MiniMax H3** | Pesos abertos desde 03/08/2026 (33B parâmetros), com suporte nativo no ComfyUI. A versão aberta sai em **no máximo 768p**; o upscaler de 2K é só da API. Um site afirma restrição de licença para uso em EUA/UE/Reino Unido/Coreia — **não confirmado**; ler a licença no Hugging Face antes de qualquer investimento. |
-| **Qwen-Image** (quantizado) | Melhor em texto legível dentro da imagem (útil para mockups). Candidato à segunda rodada. |
+| **Qwen-Image 2.1** | **Instalado para avaliação** (seção 8A.3): melhor que o Z-Image em texto com acentos, mas licença **só não comercial** — decisão em [ADR-009](16-apendices/adrs.md#adr-009). |
+| **Qwen-Image 2512** (fp8, Apache 2.0) | Alternativa de licença limpa para texto em imagem: ~30 GB (modelo de 20 B, 20,4 GB + encoder 9,4 GB + VAE), pesado em 16 GB. **Não testado.** Candidato se a Protustech não licenciar o 2.1. |
 | **FLUX.2 klein 4B** | Bom para edição e multi-referência, Apache 2.0. Candidato. |
 | **FLUX.2 [dev]** | Descartado: pede 24 GB ou mais e a licença é não comercial. |
 | **Wan 2.2 A14B** (GGUF Q4) | Mais qualidade de movimento que o 5B, mas apertado em 16 GB e sem áudio. Perdeu urgência diante do LTX 2.5; reavaliar só se surgir uma limitação do LTX. |
@@ -409,7 +466,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | **WanGP** (`deepbeepmeep/Wan2GP`) | Interface alternativa com gestão agressiva de memória (afirma H3 de 15 s em 1080p com ~11 GB de VRAM — alegação do projeto, não verificada). Visto em vídeo de terceiros em 08/10/2026. **Adiado:** o LTX 2.5 já roda bem no ComfyUI; reconsiderar se a RAM apertada ou vídeos de 720p mais longos virarem problema. Se for testado: `git clone` + `uv` em `/srv/pases/wan2gp`, fora do Git, só em `127.0.0.1`. |
 | **Pinokio** | **Descartado:** instala apps rodando scripts que executam qualquer comando na máquina (revisão humana só dos apps em destaque, isolamento por pasta, não sandbox) e foge do princípio de infraestrutura reconstruível (P6). |
 
-**Gatilho para a próxima rodada:** uso real que o Z-Image/LTX 2.5 não atenda (texto em imagem → Qwen-Image; movimento mais complexo; vídeo mais longo) — não por curiosidade de catálogo. A suíte padronizada já existe (seção 8A.5b): todo candidato roda a suíte completa antes de ser promovido.
+**Gatilho para a próxima rodada:** uso real que o Z-Image/LTX 2.5 não atenda (texto denso em imagem; movimento mais complexo; vídeo mais longo) — não por curiosidade de catálogo. A suíte padronizada já existe (seção 8A.5b): todo candidato roda a suíte completa antes de ser promovido.
 
 !!! note "Retrato de outubro/2026"
     Esta camada muda em ciclos de poucos meses (como a de LLMs). Os modelos desta página são um retrato de 08/10/2026; revisar a cada mudança de fase do [Roadmap](15-roadmap.md) e registrar substituições aqui.
@@ -427,14 +484,17 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | RAM no limite com o LTX 2.5 (pico 50,7 de 59 GB) | Não rodar outras cargas pesadas durante a geração; vigiar a RAM; se estourar, reduzir resolução/duração |
 | Licença do LTX 2.5 (gratuita só abaixo de US$ 10 mi de receita anual do grupo) | Enquadramento declarado em 08/10/2026; reavaliar com o crescimento da empresa; ver aviso na seção 8A.3 |
 | Token do Hugging Face em texto simples em `~/.cache/huggingface/token` | Token só de leitura, **revogado no site em 08/10/2026** (informado pelo responsável; o `hf auth whoami` falha, o que confirma). O arquivo local fica inútil e pode ser apagado com `hf auth logout` |
-| Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; Z-Image-Turbo e Wan 2.2 são Apache 2.0 (Hugging Face, 07/10/2026); o **LTX 2.5 tem licença própria** (seção 8A.3) |
+| **Qwen-Image 2.1 sob licença não comercial** | Usar só para avaliação; não incluir em materiais da empresa sem licença comercial da Qwen ou migrar para o 2512 (Apache); ver [ADR-009](16-apendices/adrs.md#adr-009) |
+| Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; Z-Image-Turbo e Wan 2.2 são Apache 2.0 (Hugging Face, 07/10/2026); o **LTX 2.5** e o **Qwen-Image 2.1** têm licenças próprias (seção 8A.3) |
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
 - **Avaliar o áudio** gerado pelo LTX 2.5 (não foi avaliado)
 - Testar a **extensão de vídeos** (vídeos mais longos que 5 s)
-- Próxima rodada de modelos (Qwen-Image para texto em imagem; FLUX.2 klein) após benchmark
+- **Decidir a licença do Qwen-Image** (licenciar o 2.1, testar o 2512 em Apache 2.0, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)
+- Avaliação humana dos resultados do Qwen-Image e dos itens I1/I4 com ele
+- Próxima rodada de modelos (FLUX.2 klein para edição; Wan A14B) após benchmark
 - Validar o `Linger` em um reboot real e apagar o token local (`hf auth logout`)
 - Workflows do ComfyUI versionados e backup deles ([Cap. 14](14-backup.md))
 - Integração com o AI Gateway ([ADR-004](16-apendices/adrs.md#adr-004)) — hoje o ComfyUI é usado só pela interface web local

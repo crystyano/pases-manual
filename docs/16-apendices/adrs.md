@@ -258,3 +258,44 @@ Também houve uma **correção de premissa**: as fontes secundárias de 07/10 di
 - **A avaliação humana contrariar a leitura visual** do assistente, ou o áudio ser inadequado.
 - **Surgir modelo aberto claramente superior** no mesmo orçamento de memória, ou upgrade de GPU/RAM (reabre Wan A14B, FLUX.2 [dev] e variantes sem offload).
 - **Estouro de RAM** durante gerações reais.
+
+---
+
+## ADR-009 — Qwen-Image 2.1 instalado só para avaliação (licença não comercial) {#adr-009}
+
+**Status:** Aceito <span class="badge badge-existe">Em avaliação</span> — **decisão de uso comercial pendente** · **Data:** 2026-10-09
+
+### Objetivo
+Ter na estação um modelo de imagem mais confiável que o Z-Image-Turbo para **texto dentro de imagens** (etiquetas, documentos, mockups), sem comprometer a empresa com uma licença que ela ainda não avaliou.
+
+### Alternativas avaliadas
+- **Manter só o Z-Image-Turbo** (Apache 2.0): mais rápido, mas errou número e palavra em texto longo e em interface.
+- **Qwen-Image 2.1** (escolhido para avaliar): leve (~7 B, 17,3 GB de arquivos), cabe folgado em 16 GB, mas sob a **Qwen Research License — somente pesquisa ou avaliação**.
+- **Qwen-Image 2512** (Apache 2.0): licença limpa, porém ~30 GB e mais pesado em 16 GB. Não testado.
+- **Licenciar o 2.1** para uso comercial (`model-business@notice.qwencloud.com`): condições e custo desconhecidos.
+
+### Decisão
+Instalar o **Qwen-Image 2.1** (int8-convrot) no ComfyUI **apenas para avaliação e pesquisa interna**. **Não usar as imagens geradas por ele em materiais comerciais da Protustech** até que uma destas ações seja tomada: (a) obter licença comercial da Qwen; ou (b) validar o Qwen-Image 2512 (Apache 2.0) e usá-lo no lugar. Enquanto isso, o **Z-Image-Turbo segue como modelo padrão** de imagem.
+
+### Justificativa
+Resultados de 09/10/2026, mesma suíte, mesmo hardware ([Cap. 8A.5](../08a-imagem-video.md)):
+
+| | Z-Image-Turbo | Qwen-Image 2.1 |
+|---|---|---|
+| Bloco longo com acentos (I5) | 2 de 3 corretas | **3 de 3 corretas** |
+| Etiqueta curta (I2) | 3 de 3 | 3 de 3 |
+| Mockup de ERP (I3) | títulos errados ("Pedigos") | títulos certos, miúdo ilegível |
+| Tempo por imagem | **12 s** | 18 s |
+
+O ganho é real em texto com acentos e números, mas **não resolve interface densa**. Como o ganho é moderado e a licença é restritiva, a decisão correta é avaliar sem usar em produção.
+
+### Consequências e riscos
+- **Risco de uso indevido:** é fácil esquecer que o modelo é não comercial. Mitigação: o aviso está no Cap. 8A.3 e na tabela de riscos; nenhuma imagem do Qwen deve ir para material comercial sem decisão registrada aqui.
+- **Termos:** lei da China, foro em Hangzhou; quebra de termos obriga a apagar o material. "Built with Qwen" é exigido se o modelo ou suas saídas forem usados para treinar/melhorar outro modelo de IA distribuído.
+- **17,3 GB de disco** ocupados por um modelo que pode vir a ser apagado (modelos do ComfyUI: ~91 GB).
+- **Avaliação limitada:** 3 sementes por item e leitura visual do assistente; a avaliação humana ainda não foi feita, e I1/I4 não foram avaliados com o Qwen.
+
+### Quando revisar
+- **Resposta da Qwen** sobre licença comercial (valor e condições), ou decisão de não licenciar → testar o 2512 com a mesma suíte e escolher.
+- **A avaliação humana mostrar que o ganho de texto não compensa** os 50% a mais de tempo → remover o Qwen-Image 2.1 e liberar os 17,3 GB.
+- **Mudança dos termos da licença** ou lançamento de um modelo aberto (Apache) com texto igual ou melhor no mesmo orçamento de memória.
