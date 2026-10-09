@@ -284,6 +284,20 @@ Teste de carga prévio (768×448, 2 s, a frio): 77 s, 70 °C, 162 W, RAM 51,4 GB
     - **2 a 3 sementes por item:** sinal forte, não estatística.
     - **RAM no limite:** 50,7 de 59 GB. Com o LTX carregado, não rodar outras cargas pesadas.
 
+### LTX 2.5 — primeiro e último quadro (flf2v) <span class="badge badge-existe">Existe — 08/10/2026</span>
+
+Template oficial `video_ltx2_5_flf2v`, reproduzido em `bench/ltx.py` (`wf_ltx_flf`). Ao contrário do texto/imagem-para-vídeo, é **um único estágio**, sem upscale latente: o vídeo nasce direto na resolução final (largura e altura **múltiplas de 32**). O primeiro quadro entra por `LTXVAddGuide` com índice 0 e o último com índice -1, ambos com força 0,7; ao fim os guias são removidos (`LTXVCropGuides`). Rodada `2026-10-08_2337_ltx`, 896×512, 49 quadros (2 s), 2 sementes por item. **4 gerações, 0 falhas**, pico de 73 °C e 166 W; **~21 s** por geração com o prompt já em cache (~100 s na 1ª semente de cada prompt, ver seção 8A.6).
+
+| Item | Extremos | Resultado (leitura do assistente, 3 quadros por vídeo) |
+|---|---|---|
+| **F1** — reconstrução | Primeiro = imagem I1_101; último = fim de um vídeo LTX que parte dessa imagem | **Bom nas 2 sementes.** Começa e termina fiel aos extremos, com câmera avançando suave pelo caminho esperado; praticamente reproduz o vídeo de origem |
+| **F2** — transição entre cenas | Primeiro = I1_101; último = I1_102 (outra bancada) | **Chega fiel nos dois extremos, mas o meio é ruim.** Semente 101: *cross-dissolve* (as duas cenas sobrepostas, com transparência), não um movimento de câmera. Semente 102: o quadro do meio é um borrão de movimento irreconhecível, e depois "pousa" exato no último quadro |
+
+**Leitura:** o flf2v funciona bem quando os dois quadros são **da mesma cena** (a câmera ou a luz mudando) — é o uso para o qual serve. Quando os extremos são cenas **diferentes**, o modelo respeita as duas pontas mas não inventa um caminho plausível: recorre a dissolver ou a borrar. Para transições entre cenas, a técnica adequada é outra (cortes, ou gerar trechos separados).
+
+!!! warning "Limites"
+    2 sementes por item e 3 quadros por vídeo avaliados; o áudio não foi avaliado. O prompt negativo usado é o curto dos demais testes do LTX, não o do template (que tem termos de uma cena específica de pessoa falando).
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
@@ -299,10 +313,10 @@ Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLM
 cd /srv/pases/comfyui-config/bench
 /srv/pases/comfyui/.venv/bin/python -I bench.py --dry-run          # valida, não gera
 /srv/pases/comfyui/.venv/bin/python -I bench.py                    # suíte completa (Z-Image + Wan), ~40 min
-/srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx       # só vídeo, com o LTX 2.5, ~10 min
+/srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx       # só vídeo + F1/F2, com o LTX 2.5, ~12 min
 ```
 
-Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s. A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
+Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
 
 **Linha de base das imagens** (Z-Image-Turbo, 12 gerações, 0 falhas): mediana de **12 s** por imagem 1024², pico de 76 °C e 169 W. A 1ª geração a frio levou 50 s.
 
@@ -324,8 +338,8 @@ Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · 
 
 - **RAM é o limite, não a VRAM:** pico de ~50,7 GB de 59 GB. Antes de gerar, fechar cargas pesadas; o Devstral deve estar descarregado (`ollama ps` vazio).
 - **Dimensões:** largura e altura finais **múltiplas de 64** (o estágio 1 roda na metade e precisa de múltiplos de 32). **Frames = segundos × fps + 1 e precisa ser 8n+1** (2 s a 24 fps = 49; 5 s = 121).
-- **A 1ª geração é lenta** (49 a 106 s nos testes) por causa da carga dos ~37 GB de modelos; as seguintes caem para 19 a 84 s.
-- Templates prontos na interface: `video_ltx2_5_t2v` (texto), `video_ltx2_5_i2v` (imagem) e `video_ltx2_5_flf2v` (primeiro e último quadro — ainda não testado).
+- **Cada prompt novo custa ~80 s a mais.** O text encoder (14,6 GB) e o transformer (20,5 GB) não cabem juntos na GPU: a cada prompt novo o ComfyUI carrega o encoder, descarrega e recarrega o transformer (visto nos logs). Com o **mesmo prompt e outra semente** o encoder é reaproveitado e a geração leva só ~19 a 21 s (vídeo curto). Na prática: **gere várias sementes por prompt** (ex.: 3 variações seguidas) em vez de trocar de prompt a cada geração. Os ~100 s da 1ª semente de cada item nas tabelas vêm daí, não de uma carga única dos modelos.
+- Templates prontos na interface: `video_ltx2_5_t2v` (texto), `video_ltx2_5_i2v` (imagem) e `video_ltx2_5_flf2v` (primeiro e último quadro — testado, ver seção 8A.5).
 
 ### Comandos do serviço
 
@@ -350,14 +364,9 @@ curl -s -o /dev/null -w "HTTP %{http_code}\n" http://127.0.0.1:8188/
 
 Resultado esperado: `active` · `127.0.0.1:8188` (**nunca** `0.0.0.0`) · `HTTP 200`.
 
-### Subir no boot (pendente)
+### Subir no boot <span class="badge badge-existe">Existe — 08/10/2026</span>
 
-O serviço é de **usuário**: sem *linger* ativo, ele só inicia depois do login. Em 08/10/2026 o estado era `Linger=no` <span class="badge badge-confirmar">A confirmar</span> — não foi alterado por exigir `sudo`. Para subir no boot:
-
-```bash
-sudo loginctl enable-linger pases
-loginctl show-user pases -p Linger   # esperado: Linger=yes
-```
+O serviço é de **usuário**: sem *linger* ativo, ele só inicia depois do login. O *linger* foi ativado pelo responsável em 08/10/2026 (`sudo loginctl enable-linger pases`) e verificado: `loginctl show-user pases -p Linger` retorna `Linger=yes`, então o ComfyUI sobe no boot, antes de qualquer login. Para conferir após um reinício real: `systemctl --user is-active comfyui` → `active`. <span class="badge badge-confirmar">Falta validar em um reboot de fato</span>
 
 ### Ferramentas de apoio <span class="badge badge-existe">Existe — 08/10/2026</span>
 
@@ -417,16 +426,16 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | Versionar a pasta `comfyui/` inteira por engano | Ignorada no `.gitignore`; só `comfyui-config/` é versionada (seção 8A.7) |
 | RAM no limite com o LTX 2.5 (pico 50,7 de 59 GB) | Não rodar outras cargas pesadas durante a geração; vigiar a RAM; se estourar, reduzir resolução/duração |
 | Licença do LTX 2.5 (gratuita só abaixo de US$ 10 mi de receita anual do grupo) | Enquadramento declarado em 08/10/2026; reavaliar com o crescimento da empresa; ver aviso na seção 8A.3 |
-| Token do Hugging Face em texto simples em `~/.cache/huggingface/token` | Token só de leitura; **revogar** ao terminar o teste <span class="badge badge-confirmar">A confirmar</span> |
+| Token do Hugging Face em texto simples em `~/.cache/huggingface/token` | Token só de leitura, **revogado no site em 08/10/2026** (informado pelo responsável; o `hf auth whoami` falha, o que confirma). O arquivo local fica inútil e pode ser apagado com `hf auth logout` |
 | Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; Z-Image-Turbo e Wan 2.2 são Apache 2.0 (Hugging Face, 07/10/2026); o **LTX 2.5 tem licença própria** (seção 8A.3) |
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
 - **Avaliar o áudio** gerado pelo LTX 2.5 (não foi avaliado)
-- Testar `video_ltx2_5_flf2v` (primeiro e último quadro) e a extensão de vídeos
+- Testar a **extensão de vídeos** (vídeos mais longos que 5 s)
 - Próxima rodada de modelos (Qwen-Image para texto em imagem; FLUX.2 klein) após benchmark
-- Revogar o token do Hugging Face e confirmar `Linger`
+- Validar o `Linger` em um reboot real e apagar o token local (`hf auth logout`)
 - Workflows do ComfyUI versionados e backup deles ([Cap. 14](14-backup.md))
 - Integração com o AI Gateway ([ADR-004](16-apendices/adrs.md#adr-004)) — hoje o ComfyUI é usado só pela interface web local
 - Confirmar `Linger` (seção 8A.6) e a política de backup dos workflows (seção 8A.7)

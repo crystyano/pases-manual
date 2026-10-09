@@ -249,6 +249,7 @@ Também houve uma **correção de premissa**: as fontes secundárias de 07/10 di
 - **Licença própria (LTX-2.x Community License):** gratuita só para entidades com receita anual abaixo de US$ 10 milhões (soma de afiliadas); acima disso, licença paga para uso comercial. O enquadramento foi declarado pelo responsável em 08/10/2026 e **não verificado**. Treinar/destilar modelos derivados para uso comercial exige licença paga.
 - **RAM no limite:** pico de 50,7 GB de 59 GB; com o LTX carregado não rodar outras cargas pesadas. Se a RAM virar gargalo, reabrir a discussão (mais RAM, ou WanGP com sua gestão de memória).
 - **Acesso restrito no Hugging Face:** exige conta, aceite de licença e token; o token fica em texto simples em `~/.cache/huggingface/token` e deve ser revogado após o uso.
+- **Custo por prompt novo (~80 s):** o text encoder e o transformer não cabem juntos na GPU e se alternam a cada prompt; com o mesmo prompt a geração leva ~21 s. O fluxo ideal gera várias sementes por prompt.
 - **Comparação com ressalvas:** dimensões ~15% maiores no LTX (múltiplos de 64), versão *distilled* (menos passos) e poucas sementes por item. A avaliação humana (fichas em `bench/results/`) ainda não foi feita.
 - **Dependência de um único fornecedor/versão:** o ecossistema muda em meses; os arquivos baixados ficam fixados por SHA-256.
 
