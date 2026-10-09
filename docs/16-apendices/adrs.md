@@ -165,7 +165,7 @@ O volume crítico é pequeno (~100–200 GB; modelos de IA e SO ficam fora por s
 
 ## ADR-007 — ComfyUI como plataforma de geração de imagem e vídeo, com Z-Image-Turbo e Wan 2.2 5B {#adr-007}
 
-**Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-08
+**Status:** Aceito <span class="badge badge-existe">Em uso</span> — **parcialmente substituído pelo [ADR-008](#adr-008)** quanto ao *modelo de vídeo principal* (o ComfyUI, o Z-Image-Turbo e o bind em `127.0.0.1` seguem valendo) · **Data:** 2026-10-08
 
 ### Objetivo
 Dar à estação a capacidade de gerar imagens e vídeos localmente (material de produto, mockups, protótipos visuais), sem depender de serviços pagos por geração e sem enviar material dos produtos para fora da máquina — respeitando o teto de hardware (uma GPU de 16 GB) e o limite de energia do nobreak (600 W).
@@ -210,3 +210,50 @@ Os modelos ficam em `/dados/modelos/comfyui/` e a saída em `/scratch/comfyui/ou
 - **Upgrade de GPU** (seção 3.4 do [Cap. 3](../03-hardware.md)): o teto de 16 GB é o principal limitador; mais VRAM reabre LTX 2.5 completo e FLUX.2 [dev].
 - **Necessidade de acesso por outras máquinas ou pelos produtos:** exige proxy com autenticação ou integração via AI Gateway ([ADR-004](#adr-004)), e reabre a decisão de bind em `127.0.0.1`.
 - **Mudança de licença** de qualquer modelo instalado, ou aparecimento de um modelo aberto claramente superior no mesmo orçamento de VRAM.
+
+---
+
+## ADR-008 — LTX 2.5 como modelo de vídeo principal {#adr-008}
+
+**Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-08 · **Substitui parcialmente:** [ADR-007](#adr-007) (apenas a escolha do Wan 2.2 5B como modelo de vídeo)
+
+### Objetivo
+Ter, na estação, um modelo de vídeo com qualidade e velocidade úteis para protótipos e material visual, depois de o primeiro modelo (Wan 2.2 5B) ter produzido resultados irregulares.
+
+### Alternativas avaliadas
+- **Wan 2.2 TI2V-5B** (decisão original do ADR-007): Apache 2.0, roda em 16 GB, mas com resultados irregulares — em 1 de 3 sementes o vídeo saía quase parado ou com elementos não pedidos, e o 720p levava ~9 min.
+- **Wan 2.2 A14B:** mais qualidade, mas apertado em 16 GB e sem áudio. Não testado.
+- **MiniMax H3:** versão aberta limitada a 768p e licença com dúvida não confirmada. Não testado.
+- **WanGP / Pinokio:** interfaces alternativas, vistas em vídeo de terceiros. WanGP adiado; Pinokio descartado por segurança (executa scripts arbitrários).
+- **LTX 2.5** (escolhido): testado nos mesmos itens do Wan, com a suíte padronizada ([Cap. 8A.5b](../08a-imagem-video.md)).
+
+### Decisão
+Adotar o **LTX 2.5 distilled em int8-convrot** (transformer oficial de 21,5 GB, text encoder Gemma 4 de 15,4 GB, VAEs e upscaler espacial ×2), rodando no **ComfyUI** existente, na RTX 5060 Ti, a partir do template oficial. O Wan 2.2 5B permanece instalado como alternativa de licença limpa.
+
+### Justificativa
+Resultados medidos em 08/10/2026, mesma suíte, mesmo hardware:
+
+| Item | Wan 2.2 5B | LTX 2.5 |
+|---|---|---|
+| Vídeo curto (mediana) | 66 s | 19 s |
+| Imagem para vídeo | 69 s | 34,5 s |
+| 720p, 5 s | 554 s | 84 s |
+| Falhas | 0 de 10 | 0 de 10 |
+| Áudio | não | sim |
+
+Leitura visual (do assistente, 3 quadros por vídeo; o áudio não foi avaliado): as 3 sementes do vídeo curto avançam a câmera como pedido; as 2 do 720p ficaram coerentes; o quadro inicial foi respeitado na imagem-para-vídeo. Pontos fracos: a ferramenta muda de forma e as mãos ficam borradas no teste de movimento complexo.
+
+Também houve uma **correção de premissa**: as fontes secundárias de 07/10 diziam que em 16 GB o LTX 2.5 só rodaria por GGUF da comunidade; o transformer oficial rodou com offload dinâmico para a RAM.
+
+### Consequências e riscos
+- **Licença própria (LTX-2.x Community License):** gratuita só para entidades com receita anual abaixo de US$ 10 milhões (soma de afiliadas); acima disso, licença paga para uso comercial. O enquadramento foi declarado pelo responsável em 08/10/2026 e **não verificado**. Treinar/destilar modelos derivados para uso comercial exige licença paga.
+- **RAM no limite:** pico de 50,7 GB de 59 GB; com o LTX carregado não rodar outras cargas pesadas. Se a RAM virar gargalo, reabrir a discussão (mais RAM, ou WanGP com sua gestão de memória).
+- **Acesso restrito no Hugging Face:** exige conta, aceite de licença e token; o token fica em texto simples em `~/.cache/huggingface/token` e deve ser revogado após o uso.
+- **Comparação com ressalvas:** dimensões ~15% maiores no LTX (múltiplos de 64), versão *distilled* (menos passos) e poucas sementes por item. A avaliação humana (fichas em `bench/results/`) ainda não foi feita.
+- **Dependência de um único fornecedor/versão:** o ecossistema muda em meses; os arquivos baixados ficam fixados por SHA-256.
+
+### Quando revisar
+- **Receita do grupo se aproximando de US$ 10 milhões** (ou qualquer mudança nos termos da licença): contratar a licença paga ou migrar para o Wan (Apache 2.0).
+- **A avaliação humana contrariar a leitura visual** do assistente, ou o áudio ser inadequado.
+- **Surgir modelo aberto claramente superior** no mesmo orçamento de memória, ou upgrade de GPU/RAM (reabre Wan A14B, FLUX.2 [dev] e variantes sem offload).
+- **Estouro de RAM** durante gerações reais.

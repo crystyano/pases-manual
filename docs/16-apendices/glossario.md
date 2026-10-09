@@ -11,6 +11,7 @@
 | **HWE** | *Hardware Enablement* — kernels e drivers mais novos disponibilizados no Ubuntu LTS para suportar hardware recente. |
 | **Inferência** | Execução de um modelo de IA já treinado (gerar texto, código etc.), em oposição a treinamento. |
 | **LLM** | *Large Language Model* — modelo de linguagem de grande porte (Claude, Llama, Qwen etc.). |
+| **LTX 2.5** | Modelo de vídeo aberto da Lightricks (22 bilhões de parâmetros) que gera vídeo e áudio juntos. Licença própria: gratuito abaixo de US$ 10 milhões de receita anual (Capítulo 8A, ADR-008). |
 | **Modulare** | Produto da Protustech (sistema em desenvolvimento). |
 | **Moventus** | Produto da Protustech: sistema ERP. Banco de dados de produção hospedado no Supabase. |
 | **Otimizador de Corte** | Produto da Protustech (sistema em desenvolvimento). |
