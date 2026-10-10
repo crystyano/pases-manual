@@ -336,15 +336,18 @@ Tempo de **5 s** por edição (9 s com 2 referências), 12,6 GB de VRAM, 19,6 GB
 
 ### Consequências e riscos
 - **VAE não comparado:** não foi verificado se os pesos do VAE Apache (0,17 GB, formato diffusers) são idênticos aos do arquivo do Comfy-Org (0,34 GB). Os resultados foram bons, mas uma diferença sutil de qualidade não está descartada.
-- **Encoder fp8 sem A/B:** o template usa o `qwen_3_4b` em bf16; aqui foi usado o fp8 já instalado. Funcionou, mas não foi comparado.
+- **Encoder fp8:** o template usa o `qwen_3_4b` em bf16; aqui foi usado o fp8 já instalado. O **A/B foi feito em 09/10/2026** (ver *Atualização* abaixo): diferença desprezível; o fp8 fica.
 - **Vazamento de edição:** no teste de material, o piso (concreto) também virou madeira. Prompts devem dizer o que **não** pode mudar.
 - **Filtros de conteúdo:** a BFL recomenda implementar filtros nos modelos klein; a estação não os tem (uso interno, sem exposição na rede).
 - **Avaliação limitada:** 3 sementes por item e leitura visual do assistente; avaliação humana pendente.
 
 ### Quando revisar
-- **A avaliação humana contrariar** a leitura do assistente, ou o A/B com o encoder bf16 mostrar ganho relevante.
+- **A avaliação humana contrariar** a leitura do assistente.
 - **Surgir necessidade de composição de objetos** (E4): testar outras variantes ou modelos.
 - **Mudança da licença do klein 4B** ou de qualquer repositório usado.
 
 ### Atualização (2026-10-09) — texto para imagem testado
-O mesmo modelo foi testado em **texto→imagem** (itens I1–I5, 15 gerações, 0 falhas): **3 s por imagem** e 12,5 GB de VRAM, porém **texto dentro da imagem quebrado** (0 de 3 no bloco longo; título certo em 1 de 3 na etiqueta). Decisão complementar: o klein 4B **serve a rascunhos e conceitos visuais sem texto crítico e a edição**; para **texto na imagem** o modelo indicado continua sendo o Z-Image-Turbo (Apache 2.0) ou, havendo licença, o Qwen-Image 2.1 ([ADR-009](#adr-009)). Limite: versão fp8 com encoder fp8, sem A/B contra o bf16 do template.
+O mesmo modelo foi testado em **texto→imagem** (itens I1–I5, 15 gerações, 0 falhas): **3 s por imagem** e 12,5 GB de VRAM, porém **texto dentro da imagem quebrado** (0 de 3 no bloco longo; título certo em 1 de 3 na etiqueta). Decisão complementar: o klein 4B **serve a rascunhos e conceitos visuais sem texto crítico e a edição**; para **texto na imagem** o modelo indicado continua sendo o Z-Image-Turbo (Apache 2.0) ou, havendo licença, o Qwen-Image 2.1 ([ADR-009](#adr-009)). Limite: versão fp8 com encoder fp8, sem A/B contra o bf16 do template (**A/B feito depois — ver a atualização seguinte**).
+
+### Atualização (2026-10-09) — A/B do encoder fp8 × bf16
+O encoder `qwen_3_4b` em **bf16** (o do template oficial, 8,04 GB) foi baixado e comparado ao fp8 em texto→imagem (15 gerações) e em edição (12), nas mesmas sementes: tempo **igual** (3 s / 6 s), VRAM **+2,3 GB** (14,8 contra 12,5 GB), diferença média por pixel de **0,5 a 1,8** nas edições (praticamente idênticas) e texto **igualmente quebrado** em texto→imagem. **Decisão: manter o fp8**; o bf16 foi apagado do disco. Reinstalação documentada no [Cap. 8A, seção 8A.5](../08a-imagem-video.md). Limite: 3 sementes; o modelo do klein em bf16 (7,2 GB) não foi testado.

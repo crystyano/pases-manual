@@ -108,7 +108,7 @@ Modelo de 4 bilhões de parâmetros da Black Forest Labs, **Apache 2.0** e sem r
 !!! info "Decisão sobre o VAE (licença)"
     O template do ComfyUI aponta para `Comfy-Org/flux2-dev/.../flux2-vae.safetensors` (0,34 GB), mas esse repositório está marcado com a licença **não comercial do FLUX [dev]**. **Não foi usado.** Em seu lugar foi usado o VAE que o **próprio repositório Apache do klein** distribui, em formato diffusers, e que o ComfyUI carregou normalmente no `VAELoader`. Não foi verificado se os pesos são idênticos aos do arquivo do Comfy-Org (podem diferir em precisão: 0,17 GB contra 0,34 GB).
 
-**Ressalvas do modelo:** o template usa o encoder `qwen_3_4b` em bf16 (8,04 GB); aqui foi usado o **fp8_mixed** já instalado e funcionou, mas **não houve comparação A/B** com o bf16. A BFL recomenda implementar filtros de conteúdo ao usar o klein. A versão **9B** do klein tem licença **não comercial** e não foi instalada.
+**Ressalvas do modelo:** o template usa o encoder `qwen_3_4b` em bf16 (8,04 GB); aqui foi usado o **fp8_mixed** já instalado; o **A/B contra o bf16 foi feito em 09/10/2026** e mostrou que o fp8 é adequado (seção 8A.5). A BFL recomenda implementar filtros de conteúdo ao usar o klein. A versão **9B** do klein tem licença **não comercial** e não foi instalada.
 
 ## 8A.4 Instalação — procedimento reproduzível <span class="badge badge-existe">Existe</span>
 
@@ -435,7 +435,7 @@ Rodada `2026-10-09_2147_flux2edit` do PASES-Bench Visual: **4 edições × 3 sem
 **Conclusão:** para **edições simples** (cor, material, remoção de objeto) o klein 4B é rápido e confiável, o que o torna útil para variações de acabamento e retoques de projeto. Para **compor objetos de duas imagens** ele ainda reinterpreta a referência e não serve.
 
 !!! warning "Limites"
-    3 sementes por item, leitura visual do assistente. Uma variante só (4B distilled fp8) com o encoder fp8 reaproveitado, sem A/B contra o bf16. O E2 mostra que prompts de material podem **vazar para o piso**: convém dizer explicitamente o que **não** deve mudar.
+    3 sementes por item, leitura visual do assistente. Uma variante só (4B distilled fp8) com o encoder fp8 reaproveitado (o A/B contra o bf16 mostrou diferença desprezível nas edições). O E2 mostra que prompts de material podem **vazar para o piso**: convém dizer explicitamente o que **não** deve mudar.
 
 ### LTX 2.5 — extensão de vídeo (continuação) <span class="badge badge-existe">Existe — 09/10/2026</span>
 
@@ -495,7 +495,34 @@ Rodada `2026-10-09_2226_flux2`: os **5 itens de imagem (I1–I5), 3 sementes, 15
 **Conclusão:** o klein é o modelo **mais rápido** (4× o Z-Image) e **mais leve** (3 GB a menos de VRAM), bom para **rascunhos e conceitos visuais sem texto** e, já testado, para **edição**. **Não usar para texto dentro da imagem**: Z-Image e, sobretudo, o Qwen 2.1 são bem melhores.
 
 !!! warning "Limites"
-    3 sementes por item e leitura visual do assistente. Foi testada a versão **fp8** com o encoder **fp8**, e não a bf16 do template: parte do texto ruim pode vir disso — **não foi feita a comparação**. A variante *base* (não distilled, 50 passos) não foi testada.
+    3 sementes por item e leitura visual do assistente. Foi testada a versão **fp8** do modelo com o encoder **fp8**; a comparação posterior com o encoder **bf16** do template (seção 8A.5) mostrou que o encoder **não é a causa** do texto ruim. A variante *base* (não distilled, 50 passos) não foi testada.
+
+### FLUX.2 klein — encoder fp8 × bf16 (A/B) <span class="badge badge-existe">Existe — 09/10/2026</span>
+
+O template oficial do klein usa o text encoder `qwen_3_4b` em **bf16** (8,04 GB); a estação usa o **fp8_mixed** do Z-Image (5,63 GB). Para saber se a quantização do encoder explicava o texto ruim, o `qwen_3_4b.safetensors` (bf16, `Comfy-Org/z_image_turbo`, Apache 2.0, SHA-256 conferido) foi baixado e rodado em **texto→imagem (I1–I5, 15 gerações)** e **edição (E1–E4, 12 gerações)**, nas mesmas sementes. Rodadas `2026-10-09_2304_flux2_encbf16` e `2026-10-09_2305_flux2edit_encbf16`, contra as rodadas fp8 de `2226_flux2` e `2147_flux2edit`. Opção do runner: `--encoder bf16`. **27 gerações, 0 falhas.**
+
+| Recurso | Encoder fp8 | Encoder bf16 |
+|---|---|---|
+| Tempo por imagem / edição (mediana) | 3 s / 6 s | 3 s / 6 s (igual) |
+| Pico de VRAM | 12,5 GB | **14,8 GB** (+2,3 GB) |
+| Pico de RAM do sistema | 19,4 GB (edição: 19,6) | 23,1 GB (edição: 21,9) |
+| Disco do encoder | 5,6 GB | 8,0 GB |
+
+**Diferença objetiva entre as imagens** (diferença média absoluta por pixel, escala 0–255, mesma semente, fp8 contra bf16):
+
+| Conjunto | Diferença |
+|---|---|
+| **Edições** (E1–E4) | **0,5 a 1,8** — praticamente idênticas |
+| Texto→imagem (I2–I5) | 3 a 13 |
+| Texto→imagem (I1, oficina) | 16 a 30 |
+| *Referência:* duas sementes diferentes do mesmo item, mesmo encoder | ~54 |
+
+**Texto (leitura do assistente, 3 sementes):** etiqueta I2 com o título correto em **2 de 3** com o bf16 (era 1 de 3), mas a 2ª linha continua deformada; no bloco longo I5 uma imagem acertou a linha "Prazo: 15 dias úteis", mas o texto segue quebrado ("Cielote", "Vorula", "Armande", "R$ 4,855,00"); no mockup I3 o título continua errado ("Pedicos", "Pedioos"). Nas edições, o piso do E2 mudou do mesmo jeito e o E4 falhou do mesmo jeito.
+
+**Conclusão:** a quantização fp8 do encoder **não é a causa** do texto ruim do klein. O fp8 é adequado e economiza 2,3 GB de VRAM e ~2,4 GB de disco; o bf16 foi **apagado**. Para reinstalar: `curl -L -C - --fail -o /dados/modelos/comfyui/text_encoders/qwen_3_4b.safetensors https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors` (8,04 GB), conferir o SHA-256 e reiniciar o ComfyUI.
+
+!!! warning "Limites"
+    3 sementes; a melhora do título da etiqueta (1 → 2 de 3) está dentro do ruído. O **modelo** do klein continua em fp8 (o bf16 do modelo, 7,2 GB, não foi testado).
 
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
@@ -517,6 +544,7 @@ cd /srv/pases/comfyui-config/bench
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen      # só imagens (I1–I5), com o Qwen-Image 2.1, ~5 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen2512  # Qwen-Image 2512 (~55 min; exige reinstalar os arquivos, ver passo 6D)
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem flux2     # só imagens (I1–I5), com o FLUX.2 klein 4B (texto→imagem), ~2 min
+/srv/pases/comfyui/.venv/bin/python -I bench.py --imagem flux2 --encoder bf16   # idem com o encoder bf16 (exige baixar qwen_3_4b.safetensors; foi removido)
 /srv/pases/comfyui/.venv/bin/python -I bench.py --edicao          # só edição de imagens (E1–E4), com o FLUX.2 klein 4B, ~3 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx --only X1   # extensão de vídeo (exige um V1 do LTX de rodada anterior), ~6 min
 ```
@@ -648,9 +676,9 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 - **Decidir a licença do Qwen-Image 2.1** (licenciar, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)
 - Avaliação humana dos resultados do Qwen-Image 2.1 e dos itens I1/I4 com ele
 - (Opcional) testar a LoRA Lightning de 4 passos do 2512, se um dia o 2512 voltar a ser considerado
-- Avaliação humana das edições do FLUX.2 klein; A/B do encoder fp8 contra o bf16 do template
+- Avaliação humana das edições do FLUX.2 klein
 - Testar prompts de edição que digam o que **não** deve mudar (caso do piso no E2) e a variante **base** (não distilled) do klein
-- A/B do klein em **bf16** contra o fp8 (para saber se parte do texto ruim vem da quantização)
+- (Opcional) testar o **modelo** do klein em bf16 (7,2 GB) contra o fp8 — o A/B do **encoder** já foi feito e não mostrou ganho
 - Próxima rodada de modelos (Wan A14B) após benchmark
 - Validar o `Linger` em um reboot real e apagar o token local (`hf auth logout`)
 - Workflows do ComfyUI versionados e backup deles ([Cap. 14](14-backup.md))
