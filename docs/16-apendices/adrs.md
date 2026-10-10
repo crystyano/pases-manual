@@ -345,3 +345,6 @@ Tempo de **5 s** por edição (9 s com 2 referências), 12,6 GB de VRAM, 19,6 GB
 - **A avaliação humana contrariar** a leitura do assistente, ou o A/B com o encoder bf16 mostrar ganho relevante.
 - **Surgir necessidade de composição de objetos** (E4): testar outras variantes ou modelos.
 - **Mudança da licença do klein 4B** ou de qualquer repositório usado.
+
+### Atualização (2026-10-09) — texto para imagem testado
+O mesmo modelo foi testado em **texto→imagem** (itens I1–I5, 15 gerações, 0 falhas): **3 s por imagem** e 12,5 GB de VRAM, porém **texto dentro da imagem quebrado** (0 de 3 no bloco longo; título certo em 1 de 3 na etiqueta). Decisão complementar: o klein 4B **serve a rascunhos e conceitos visuais sem texto crítico e a edição**; para **texto na imagem** o modelo indicado continua sendo o Z-Image-Turbo (Apache 2.0) ou, havendo licença, o Qwen-Image 2.1 ([ADR-009](#adr-009)). Limite: versão fp8 com encoder fp8, sem A/B contra o bf16 do template.

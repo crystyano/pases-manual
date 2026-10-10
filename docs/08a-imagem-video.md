@@ -467,6 +467,36 @@ Rodada `2026-10-09_2208_ltx`, item **X1**: parte do V1 do LTX (2 s) e encadeia *
     - O M2 foi uma única configuração (força 1,0, 9 quadros); outras escolhas podem render diferente.
     - O prompt de continuação foi escrito em inglês e é o mesmo nas duas etapas; trocar de prompt a cada trecho custa ~80 s extra por causa do encoder (8A.6).
 
+### FLUX.2 klein 4B — texto para imagem <span class="badge badge-existe">Existe — 09/10/2026</span>
+
+Rodada `2026-10-09_2226_flux2`: os **5 itens de imagem (I1–I5), 3 sementes, 15 gerações, 0 falhas**, a 1024×1024, com o **mesmo modelo** já instalado para edição (4B distilled fp8, VAE Apache, encoder fp8 reaproveitado) — **nenhum download novo**. Parâmetros do template oficial `image_flux2_klein_text_to_image` (subgrafo *Distilled*): **4 passos, CFG 1**, `euler`, prompt negativo zerado. O template usa `flux-2-klein-4b` em **bf16** (7,2 GB); aqui roda a versão **fp8** do mesmo modelo.
+
+| Medida | FLUX.2 klein 4B | Z-Image-Turbo | Qwen-Image 2.1 |
+|---|---|---|---|
+| Tempo por imagem (mediana) | **3 s** | 12 s | 18 s |
+| 1ª geração, a frio | 24 s | 50 s | 22 s |
+| Pico de VRAM | **12,5 GB** | 15,7 GB | 15,7 GB |
+| Pico de RAM | **19,4 GB** | ~27 GB | ~28,7 GB |
+| Pico de temperatura / potência (2 GPUs) | 71 °C / 162 W | 76 °C / 169 W | 77 °C / 168 W |
+| Licença | Apache 2.0 | Apache 2.0 | não comercial |
+
+**Texto — leitura do assistente nas folhas de contato (3 sementes por item). A ficha de avaliação humana é a que vale e ainda não foi preenchida.**
+
+| Item | Resultado do klein |
+|---|---|
+| **I5** — bloco longo com acentos | **Quebrado nas 3.** "Cliebte", "Volal: R $ $ 4.850,0", "Armarô", "cozinha" deformado e "Prazo úteis" sem "15 dias" |
+| **I2** — etiqueta curta | **1 de 3 com o título certo** ("PEEDIDO", "PEDITO" nas outras); a 2ª linha deformada nas 3 ("cozihna", "Armarzinha") |
+| **I3** — mockup de ERP | Layout bonito de monitor, mas o título saiu "Pedicos" e "Pedicoos" nas 3 |
+
+**Texto longo correto (I5), todos os modelos testados:** Qwen-Image 2.1 **3 de 3** · Z-Image **2 de 3** · FLUX.2 klein **0 de 3** · Qwen-Image 2512 **0 de 3**.
+
+**Fora do texto (I1 e I4):** I1 (oficina) saiu com fotos nítidas e realistas — bancada de madeira clara, janela e painel de ferramentas —, mas **sem o "projeto de móveis sobre a mesa"** pedido no prompt. I4 (composição precisa) foi **mista**: 2 das 3 sementes têm exatamente 3 gavetas, uma tem só 2, e porta e prateleiras variam.
+
+**Conclusão:** o klein é o modelo **mais rápido** (4× o Z-Image) e **mais leve** (3 GB a menos de VRAM), bom para **rascunhos e conceitos visuais sem texto** e, já testado, para **edição**. **Não usar para texto dentro da imagem**: Z-Image e, sobretudo, o Qwen 2.1 são bem melhores.
+
+!!! warning "Limites"
+    3 sementes por item e leitura visual do assistente. Foi testada a versão **fp8** com o encoder **fp8**, e não a bf16 do template: parte do texto ruim pode vir disso — **não foi feita a comparação**. A variante *base* (não distilled, 50 passos) não foi testada.
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
@@ -486,6 +516,7 @@ cd /srv/pases/comfyui-config/bench
 /srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx       # só vídeo + F1/F2, com o LTX 2.5, ~12 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen      # só imagens (I1–I5), com o Qwen-Image 2.1, ~5 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen2512  # Qwen-Image 2512 (~55 min; exige reinstalar os arquivos, ver passo 6D)
+/srv/pases/comfyui/.venv/bin/python -I bench.py --imagem flux2     # só imagens (I1–I5), com o FLUX.2 klein 4B (texto→imagem), ~2 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --edicao          # só edição de imagens (E1–E4), com o FLUX.2 klein 4B, ~3 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx --only X1   # extensão de vídeo (exige um V1 do LTX de rodada anterior), ~6 min
 ```
@@ -578,7 +609,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | **MiniMax H3** | Pesos abertos desde 03/08/2026 (33B parâmetros), com suporte nativo no ComfyUI. A versão aberta sai em **no máximo 768p**; o upscaler de 2K é só da API. Um site afirma restrição de licença para uso em EUA/UE/Reino Unido/Coreia — **não confirmado**; ler a licença no Hugging Face antes de qualquer investimento. |
 | **Qwen-Image 2.1** | **Instalado para avaliação** (seção 8A.3): melhor que o Z-Image em texto com acentos, mas licença **só não comercial** — decisão em [ADR-009](16-apendices/adrs.md#adr-009). |
 | **Qwen-Image 2512** (fp8, Apache 2.0) | **Testado e removido (09/10/2026):** texto com erros em todas as imagens, 218–370 s por imagem. Não é alternativa ao 2.1 nem ao Z-Image ([8A.5](#qwen-image-2512-apache-20-reprovado-e-removido-existe-09102026)). |
-| **FLUX.2 klein 4B** | **Instalado e aprovado para edições simples** (cor, material, remoção) a 5 s; fraco em compor objetos de duas imagens ([8A.5](#flux2-klein-4b-edicao-de-imagens-existe-09102026)). Apache 2.0; decisão em [ADR-010](16-apendices/adrs.md#adr-010). |
+| **FLUX.2 klein 4B** | **Instalado e aprovado para edições simples** (cor, material, remoção) a 5 s; fraco em compor objetos de duas imagens ([8A.5](#flux2-klein-4b-edicao-de-imagens-existe-09102026)). Em **texto→imagem** é o mais rápido (3 s) mas **fraco em texto** ([8A.5](#flux2-klein-4b-texto-para-imagem-existe-09102026)). Apache 2.0; decisão em [ADR-010](16-apendices/adrs.md#adr-010). |
 | **FLUX.2 [dev]** | Descartado: pede 24 GB ou mais e a licença é não comercial. O repositório `Comfy-Org/flux2-dev` também foi evitado por esse motivo (ver o VAE em 8A.3). |
 | **FLUX.2 klein 9B** | Licença **não comercial**; não instalado. |
 | **Wan 2.2 A14B** (GGUF Q4) | Mais qualidade de movimento que o 5B, mas apertado em 16 GB e sem áudio. Perdeu urgência diante do LTX 2.5; reavaliar só se surgir uma limitação do LTX. |
@@ -618,7 +649,8 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 - Avaliação humana dos resultados do Qwen-Image 2.1 e dos itens I1/I4 com ele
 - (Opcional) testar a LoRA Lightning de 4 passos do 2512, se um dia o 2512 voltar a ser considerado
 - Avaliação humana das edições do FLUX.2 klein; A/B do encoder fp8 contra o bf16 do template
-- Testar o FLUX.2 klein em texto→imagem e prompts que digam o que **não** deve mudar (caso do piso no E2)
+- Testar prompts de edição que digam o que **não** deve mudar (caso do piso no E2) e a variante **base** (não distilled) do klein
+- A/B do klein em **bf16** contra o fp8 (para saber se parte do texto ruim vem da quantização)
 - Próxima rodada de modelos (Wan A14B) após benchmark
 - Validar o `Linger` em um reboot real e apagar o token local (`hf auth logout`)
 - Workflows do ComfyUI versionados e backup deles ([Cap. 14](14-backup.md))
