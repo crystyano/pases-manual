@@ -437,6 +437,36 @@ Rodada `2026-10-09_2147_flux2edit` do PASES-Bench Visual: **4 edições × 3 sem
 !!! warning "Limites"
     3 sementes por item, leitura visual do assistente. Uma variante só (4B distilled fp8) com o encoder fp8 reaproveitado, sem A/B contra o bf16. O E2 mostra que prompts de material podem **vazar para o piso**: convém dizer explicitamente o que **não** deve mudar.
 
+### LTX 2.5 — extensão de vídeo (continuação) <span class="badge badge-existe">Existe — 09/10/2026</span>
+
+**Não existe template oficial de extensão para o LTX 2.5** (só texto, imagem e primeiro/último quadro). O método aqui é montado com nós do ComfyUI e está em `bench/extend.py`: os **últimos K quadros** do trecho anterior (`LoadVideo` → `GetVideoComponents` → `ImageFromBatch`) viram guia do início do próximo trecho (`LTXVAddGuide`, `frame_idx` 0, força 1,0), num único estágio, como no flf2v. O trecho novo repete esses K quadros; ao **costurar com `ffmpeg`** descartam-se os K primeiros do trecho novo (vídeo e áudio). O **áudio de cada trecho é gerado do zero**, sem condicionamento do anterior.
+
+Rodada `2026-10-09_2208_ltx`, item **X1**: parte do V1 do LTX (2 s) e encadeia **2 extensões de 2 s** (~5,4 a 6 s no total), 896×512, 2 sementes e 2 métodos — **M1** guiado pelo **último quadro** (K = 1) e **M2** pelos **últimos 9 quadros** (K = 9). **8 gerações, 0 falhas.**
+
+| Medida | Valor |
+|---|---|
+| Tempo por extensão de 2 s | **20 a 22 s** (a 1ª, a frio: 97 s) |
+| Pico de VRAM | 15,8 GB |
+| Pico de RAM do sistema | **49,8 GB de 59 GB** |
+| Pico de temperatura / potência (2 GPUs) | 73 °C / 166 W |
+
+**Emendas.** "Salto" = diferença visual entre o último quadro antigo e o primeiro novo, dividida pela mediana da diferença entre quadros consecutivos fora das emendas (**~1 = emenda invisível**):
+
+| Método | Vídeo final | Saltos medidos (2 emendas × 2 sementes) |
+|---|---|---|
+| **M1** (1 quadro) | 145 quadros (6,0 s) | 0,91 · 1,09 · 1,23 · 1,29 |
+| **M2** (9 quadros) | 129 quadros (5,4 s) | 1,20 · 1,57 · 1,61 · 1,69 |
+
+**Leitura visual do assistente** (6 quadros ao redor das emendas de cada vídeo; a avaliação humana é a que vale e não foi feita): nos 4 vídeos, os quadros de cada lado da emenda são praticamente iguais; a câmera segue avançando e a sala e os objetos principais permanecem. **M1 teve emendas mais suaves**; o **M2, que deveria carregar melhor a inércia do movimento, não mostrou vantagem** (saltos maiores, e a semente 102 terminou com muito clarão de luz). Em 6 s os detalhes pequenos mudam (a bancada ganha outros objetos conforme a câmera se aproxima), sem a cena "derreter".
+
+**Recomendação provisória:** estender com **M1** (último quadro) — mais simples e com emendas mais limpas — e trechos de 2 s; cada extensão custa ~20 s com o prompt de continuação em cache.
+
+!!! warning "Limites"
+    - **Áudio não avaliado** (cada trecho gera o próprio áudio, então pode haver quebra na emenda) e **continuidade da velocidade do movimento não medida** (só a aparência na emenda).
+    - 2 sementes, uma cena de base e só 2 extensões; não se sabe como se comporta em vídeos mais longos.
+    - O M2 foi uma única configuração (força 1,0, 9 quadros); outras escolhas podem render diferente.
+    - O prompt de continuação foi escrito em inglês e é o mesmo nas duas etapas; trocar de prompt a cada trecho custa ~80 s extra por causa do encoder (8A.6).
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
@@ -446,6 +476,7 @@ Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLM
 | `items.json` | 8 itens (I1–I4 imagem, V1–V4 vídeo) com prompts, sementes, parâmetros e metas provisórias. **Não alterar sem criar a versão v2** — senão os resultados deixam de ser comparáveis |
 | `bench.py` | Runner: uma geração por vez, recusa rodar com modelo no Ollama, reinicia o serviço (1ª geração = medida a frio), mede VRAM/RAM/temperatura/potência, aborta acima de 82 °C, gera relatório e folhas de contato |
 | `ltx.py` | Workflow do LTX 2.5 em formato de API (espelha o template oficial: dois estágios, upscale latente ×2, áudio e vídeo juntos; versão imagem-para-vídeo) |
+| `extend.py` | Extensão de vídeo com o LTX 2.5 (item X1): continuação por quadros-guia, costura com `ffmpeg` e métrica do salto nas emendas |
 | `results/` | JSON e relatório de cada rodada, com versões do ambiente e SHA-256 dos modelos |
 
 ```bash
@@ -456,9 +487,10 @@ cd /srv/pases/comfyui-config/bench
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen      # só imagens (I1–I5), com o Qwen-Image 2.1, ~5 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen2512  # Qwen-Image 2512 (~55 min; exige reinstalar os arquivos, ver passo 6D)
 /srv/pases/comfyui/.venv/bin/python -I bench.py --edicao          # só edição de imagens (E1–E4), com o FLUX.2 klein 4B, ~3 min
+/srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx --only X1   # extensão de vídeo (exige um V1 do LTX de rodada anterior), ~6 min
 ```
 
-Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **I5** bloco de texto longo em português com acentos (adicionado em 09/10/2026) · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — **E1** edição: mudar a cor · **E2** edição: trocar o material · **E3** edição: remover um objeto · **E4** edição com duas imagens de referência — os itens `E*` só rodam com `--edicao`; os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
+Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **I5** bloco de texto longo em português com acentos (adicionado em 09/10/2026) · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — **E1** edição: mudar a cor · **E2** edição: trocar o material · **E3** edição: remover um objeto · **E4** edição com duas imagens de referência — **X1** extensão de vídeo (continuação do V1) — o item `X1` só roda com `--modelo ltx` e depende de uma rodada LTX anterior com V1; os itens `E*` só rodam com `--edicao`; os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
 
 **Linha de base das imagens** (Z-Image-Turbo, 12 gerações, 0 falhas): mediana de **12 s** por imagem 1024², pico de 76 °C e 169 W. A 1ª geração a frio levou 50 s.
 
@@ -482,6 +514,7 @@ Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · 
 - **Dimensões:** largura e altura finais **múltiplas de 64** (o estágio 1 roda na metade e precisa de múltiplos de 32). **Frames = segundos × fps + 1 e precisa ser 8n+1** (2 s a 24 fps = 49; 5 s = 121).
 - **Cada prompt novo custa ~80 s a mais.** O text encoder (14,6 GB) e o transformer (20,5 GB) não cabem juntos na GPU: a cada prompt novo o ComfyUI carrega o encoder, descarrega e recarrega o transformer (visto nos logs). Com o **mesmo prompt e outra semente** o encoder é reaproveitado e a geração leva só ~19 a 21 s (vídeo curto). Na prática: **gere várias sementes por prompt** (ex.: 3 variações seguidas) em vez de trocar de prompt a cada geração. Os ~100 s da 1ª semente de cada item nas tabelas vêm daí, não de uma carga única dos modelos.
 - Templates prontos na interface: `video_ltx2_5_t2v` (texto), `video_ltx2_5_i2v` (imagem) e `video_ltx2_5_flf2v` (primeiro e último quadro — testado, ver seção 8A.5).
+- **Para estender um vídeo** não há template: usar o método do `bench/extend.py` (seção 8A.5). Guarde o vídeo anterior na pasta `input/` do ComfyUI (o `LoadVideo` só lê dali) e use o **mesmo prompt** nas continuações; cada trecho de 2 s custa ~20 s.
 
 ### Comandos do serviço
 
@@ -579,7 +612,8 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
 - **Avaliar o áudio** gerado pelo LTX 2.5 (não foi avaliado)
-- Testar a **extensão de vídeos** (vídeos mais longos que 5 s)
+- **Avaliar o áudio** das extensões e a continuidade do movimento; testar extensões mais longas (mais de 2 etapas) e outros valores de força/quadros-guia
+- Medir a extensão com condicionamento de **áudio** do trecho anterior (nós `LTXVAudioVAEEncode` / `LTXVReferenceAudio` existem no ComfyUI e não foram usados)
 - **Decidir a licença do Qwen-Image 2.1** (licenciar, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)
 - Avaliação humana dos resultados do Qwen-Image 2.1 e dos itens I1/I4 com ele
 - (Opcional) testar a LoRA Lightning de 4 passos do 2512, se um dia o 2512 voltar a ser considerado
