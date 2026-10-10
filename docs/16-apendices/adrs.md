@@ -271,11 +271,11 @@ Ter na estação um modelo de imagem mais confiável que o Z-Image-Turbo para **
 ### Alternativas avaliadas
 - **Manter só o Z-Image-Turbo** (Apache 2.0): mais rápido, mas errou número e palavra em texto longo e em interface.
 - **Qwen-Image 2.1** (escolhido para avaliar): leve (~7 B, 17,3 GB de arquivos), cabe folgado em 16 GB, mas sob a **Qwen Research License — somente pesquisa ou avaliação**.
-- **Qwen-Image 2512** (Apache 2.0): licença limpa, porém ~30 GB e mais pesado em 16 GB. Não testado.
+- **Qwen-Image 2512** (Apache 2.0): licença limpa, porém ~30 GB e mais pesado em 16 GB. **Testado em 09/10/2026 e reprovado** (ver *Atualização* abaixo).
 - **Licenciar o 2.1** para uso comercial (`model-business@notice.qwencloud.com`): condições e custo desconhecidos.
 
 ### Decisão
-Instalar o **Qwen-Image 2.1** (int8-convrot) no ComfyUI **apenas para avaliação e pesquisa interna**. **Não usar as imagens geradas por ele em materiais comerciais da Protustech** até que uma destas ações seja tomada: (a) obter licença comercial da Qwen; ou (b) validar o Qwen-Image 2512 (Apache 2.0) e usá-lo no lugar. Enquanto isso, o **Z-Image-Turbo segue como modelo padrão** de imagem.
+Instalar o **Qwen-Image 2.1** (int8-convrot) no ComfyUI **apenas para avaliação e pesquisa interna**. **Não usar as imagens geradas por ele em materiais comerciais da Protustech** até que uma destas ações seja tomada: (a) obter licença comercial da Qwen; ou (b) ficar só com o Z-Image-Turbo (Apache 2.0) — o Qwen-Image 2512, que seria a alternativa Apache, foi testado e reprovado. Enquanto isso, o **Z-Image-Turbo segue como modelo padrão** de imagem.
 
 ### Justificativa
 Resultados de 09/10/2026, mesma suíte, mesmo hardware ([Cap. 8A.5](../08a-imagem-video.md)):
@@ -296,6 +296,9 @@ O ganho é real em texto com acentos e números, mas **não resolve interface de
 - **Avaliação limitada:** 3 sementes por item e leitura visual do assistente; a avaliação humana ainda não foi feita, e I1/I4 não foram avaliados com o Qwen.
 
 ### Quando revisar
-- **Resposta da Qwen** sobre licença comercial (valor e condições), ou decisão de não licenciar → testar o 2512 com a mesma suíte e escolher.
+- **Resposta da Qwen** sobre licença comercial (valor e condições): licenciar o 2.1 ou ficar com o Z-Image. (A alternativa 2512 já foi descartada.)
 - **A avaliação humana mostrar que o ganho de texto não compensa** os 50% a mais de tempo → remover o Qwen-Image 2.1 e liberar os 17,3 GB.
 - **Mudança dos termos da licença** ou lançamento de um modelo aberto (Apache) com texto igual ou melhor no mesmo orçamento de memória.
+
+### Atualização (2026-10-09) — Qwen-Image 2512 testado e removido
+O 2512 (Apache 2.0) foi baixado (30,07 GB, SHA-256 conferido) e testado no item de texto longo (I5), com os parâmetros do template oficial (50 passos, CFG 4): **0 de 3 imagens com texto correto a 1024²** e **0 de 2 à resolução nativa de 1328²**, a **218 s** e **370 s** por imagem (contra 12 s do Z-Image e 18 s do Qwen 2.1), com pico de 37,7 GB de RAM. Foi **descartado e apagado do disco**; o procedimento de reinstalação ficou no [Cap. 8A, passo 6D](../08a-imagem-video.md). Consequência para esta decisão: não existe alternativa Apache melhor que o **Z-Image-Turbo** para texto em imagem; a escolha real é entre **licenciar o Qwen-Image 2.1** (melhor texto) e **ficar com o Z-Image**. Limites: um item, poucas sementes, leitura visual do assistente; a LoRA de 4 passos do 2512 não foi testada.

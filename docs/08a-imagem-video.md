@@ -249,6 +249,16 @@ curl -L -C - --fail -o $B/diffusion_models/qwen_image_2.1_int8_convrot.safetenso
 
 O download levou cerca de 40 min nesta rede. Conferir os SHA-256 contra o publicado no Hugging Face (campo `lfs.oid` da API de árvore do repositório) e reiniciar o ComfyUI.
 
+**6D. Qwen-Image 2512 (Apache 2.0) — baixado, testado e removido em 09/10/2026.** Mantido aqui só para poder reinstalar. Origem `Comfy-Org/Qwen-Image_ComfyUI` (público, sem login), mesmo método do passo 6C com `curl` retomável:
+
+| Arquivo | Tamanho | Pasta |
+|---|---|---|
+| `qwen_image_2512_fp8_e4m3fn.safetensors` | 20,43 GB | `diffusion_models/` |
+| `qwen_2.5_vl_7b_fp8_scaled.safetensors` | 9,38 GB | `text_encoders/` |
+| `qwen_image_vae.safetensors` | 0,25 GB | `vae/` |
+
+URL base: `https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/<pasta>/<arquivo>`. Depois: conferir SHA-256 e reiniciar o ComfyUI. O workflow está em `bench/qwen.py` (`wf_qwen2512`) e roda com `bench.py --imagem qwen2512`, **que só funciona com os arquivos reinstalados**. A LoRA opcional de 4 passos (`Qwen-Image-2512-Lightning-4steps-V1.0`, 1,58 GB, repositório `lightx2v/Qwen-Image-2512-Lightning`) **não foi testada**.
+
 **7. Reiniciar o serviço** para o ComfyUI indexar os modelos novos:
 
 ```bash
@@ -353,6 +363,25 @@ Rodada `2026-10-09_0043_qwen` (Qwen, itens I1–I5, 3 sementes: 15 gerações, *
 !!! warning "Limites"
     3 sementes por item e avaliação visual do assistente. O Qwen está sob licença **só para avaliação** (seção 8A.3): estes resultados orientam a decisão de licenciar ou de usar o Qwen-Image 2512 (Apache 2.0), não autorizam uso em produção.
 
+### Qwen-Image 2512 (Apache 2.0) — reprovado e removido <span class="badge badge-existe">Existe — 09/10/2026</span>
+
+O Qwen-Image 2.1 só pode ser usado para avaliação ([ADR-009](16-apendices/adrs.md#adr-009)); o **2512** é Apache 2.0 e era a alternativa livre de licença. Foi baixado (30,07 GB, SHA-256 conferido), testado no item **I5** (texto longo com acentos) e **removido do disco**. Parâmetros do template oficial `image_qwen_Image_2512`: **50 passos, CFG 4**, `euler`, shift 3,1, sem a LoRA de aceleração, com o prompt negativo do template. Rodadas `2026-10-09_2021_qwen2512` (1024², 3 sementes) e um teste avulso à **resolução nativa de 1328×1328** (2 sementes).
+
+| | Z-Image-Turbo | Qwen-Image 2.1 | Qwen-Image 2512 |
+|---|---|---|---|
+| Licença | Apache 2.0 | não comercial | Apache 2.0 |
+| I5 — texto totalmente correto | 2 de 3 | **3 de 3** | **0 de 3** (1024²) e **0 de 2** (1328²) |
+| Tempo por imagem | **12 s** | 18 s | **218 s** (1024²) / **370 s** (1328²) |
+| Pico de RAM | ~27 GB | ~28,7 GB | 37,7 GB |
+| Pico de VRAM | 15,7 GB | 15,7 GB | 15,5 GB (1024²) / 15,8 GB (1328²) |
+
+**O texto saiu com erros em todas as imagens do 2512.** A 1024²: "Cliete", "Clente", "Valoo", "Marceneria", "Armáro", "cozinho", "ORÇIAMENTO". À resolução nativa de 1328² melhorou — "Marcenaria Silva", "R$ 4.850,00", "15 dias úteis" e "Nº 0412" saíram certos —, mas ainda restaram erros por imagem ("Clente", "Valo"/"Valoo", "cozinho", "ORÇÍAMENTO"). Ou seja, **a resolução ajudou, mas não explica o resultado**.
+
+**Conclusão:** o 2512 perde para o Z-Image em tudo neste item — texto pior, **18 a 30 vezes mais lento**, mais RAM — e o Z-Image já é Apache 2.0. Portanto **não é uma alternativa viável** ao Qwen-Image 2.1 para texto; os 30 GB foram apagados. Se a precisão de texto for importante, o caminho é licenciar o 2.1 (ADR-009); se não for, o Z-Image basta.
+
+!!! warning "Limites"
+    Um único item (I5), 3 sementes a 1024² e 2 a 1328², leitura visual do assistente. I2 e I3 não foram rodados com o 2512, e a LoRA de 4 passos não foi testada — a qualidade de texto com ela é desconhecida.
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
@@ -370,6 +399,7 @@ cd /srv/pases/comfyui-config/bench
 /srv/pases/comfyui/.venv/bin/python -I bench.py                    # suíte completa (Z-Image + Wan), ~40 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx       # só vídeo + F1/F2, com o LTX 2.5, ~12 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen      # só imagens (I1–I5), com o Qwen-Image 2.1, ~5 min
+/srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen2512  # Qwen-Image 2512 (~55 min; exige reinstalar os arquivos, ver passo 6D)
 ```
 
 Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **I5** bloco de texto longo em português com acentos (adicionado em 09/10/2026) · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
@@ -458,7 +488,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | **LTX 2.5** | **Adotado como modelo de vídeo principal** ([ADR-008](16-apendices/adrs.md#adr-008)). **Correção:** a avaliação de 07/10 dizia que em 16 GB só rodaria por quantizações GGUF da comunidade; na prática, o transformer **oficial** `int8-convrot` (21,5 GB) rodou com offload dinâmico, sem GGUF, a 19 s por vídeo curto. As fontes secundárias estavam desatualizadas. |
 | **MiniMax H3** | Pesos abertos desde 03/08/2026 (33B parâmetros), com suporte nativo no ComfyUI. A versão aberta sai em **no máximo 768p**; o upscaler de 2K é só da API. Um site afirma restrição de licença para uso em EUA/UE/Reino Unido/Coreia — **não confirmado**; ler a licença no Hugging Face antes de qualquer investimento. |
 | **Qwen-Image 2.1** | **Instalado para avaliação** (seção 8A.3): melhor que o Z-Image em texto com acentos, mas licença **só não comercial** — decisão em [ADR-009](16-apendices/adrs.md#adr-009). |
-| **Qwen-Image 2512** (fp8, Apache 2.0) | Alternativa de licença limpa para texto em imagem: ~30 GB (modelo de 20 B, 20,4 GB + encoder 9,4 GB + VAE), pesado em 16 GB. **Não testado.** Candidato se a Protustech não licenciar o 2.1. |
+| **Qwen-Image 2512** (fp8, Apache 2.0) | **Testado e removido (09/10/2026):** texto com erros em todas as imagens, 218–370 s por imagem. Não é alternativa ao 2.1 nem ao Z-Image ([8A.5](#qwen-image-2512-apache-20-reprovado-e-removido-existe-09102026)). |
 | **FLUX.2 klein 4B** | Bom para edição e multi-referência, Apache 2.0. Candidato. |
 | **FLUX.2 [dev]** | Descartado: pede 24 GB ou mais e a licença é não comercial. |
 | **Wan 2.2 A14B** (GGUF Q4) | Mais qualidade de movimento que o 5B, mas apertado em 16 GB e sem áudio. Perdeu urgência diante do LTX 2.5; reavaliar só se surgir uma limitação do LTX. |
@@ -484,7 +514,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | RAM no limite com o LTX 2.5 (pico 50,7 de 59 GB) | Não rodar outras cargas pesadas durante a geração; vigiar a RAM; se estourar, reduzir resolução/duração |
 | Licença do LTX 2.5 (gratuita só abaixo de US$ 10 mi de receita anual do grupo) | Enquadramento declarado em 08/10/2026; reavaliar com o crescimento da empresa; ver aviso na seção 8A.3 |
 | Token do Hugging Face em texto simples em `~/.cache/huggingface/token` | Token só de leitura, **revogado no site em 08/10/2026** (informado pelo responsável; o `hf auth whoami` falha, o que confirma). O arquivo local fica inútil e pode ser apagado com `hf auth logout` |
-| **Qwen-Image 2.1 sob licença não comercial** | Usar só para avaliação; não incluir em materiais da empresa sem licença comercial da Qwen ou migrar para o 2512 (Apache); ver [ADR-009](16-apendices/adrs.md#adr-009) |
+| **Qwen-Image 2.1 sob licença não comercial** | Usar só para avaliação; não incluir em materiais da empresa sem licença comercial da Qwen — a alternativa Apache (2512) foi testada e reprovada; sem licença, usar o Z-Image; ver [ADR-009](16-apendices/adrs.md#adr-009) |
 | Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; Z-Image-Turbo e Wan 2.2 são Apache 2.0 (Hugging Face, 07/10/2026); o **LTX 2.5** e o **Qwen-Image 2.1** têm licenças próprias (seção 8A.3) |
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
@@ -492,8 +522,9 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
 - **Avaliar o áudio** gerado pelo LTX 2.5 (não foi avaliado)
 - Testar a **extensão de vídeos** (vídeos mais longos que 5 s)
-- **Decidir a licença do Qwen-Image** (licenciar o 2.1, testar o 2512 em Apache 2.0, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)
-- Avaliação humana dos resultados do Qwen-Image e dos itens I1/I4 com ele
+- **Decidir a licença do Qwen-Image 2.1** (licenciar, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)
+- Avaliação humana dos resultados do Qwen-Image 2.1 e dos itens I1/I4 com ele
+- (Opcional) testar a LoRA Lightning de 4 passos do 2512, se um dia o 2512 voltar a ser considerado
 - Próxima rodada de modelos (FLUX.2 klein para edição; Wan A14B) após benchmark
 - Validar o `Linger` em um reboot real e apagar o token local (`hf auth logout`)
 - Workflows do ComfyUI versionados e backup deles ([Cap. 14](14-backup.md))
