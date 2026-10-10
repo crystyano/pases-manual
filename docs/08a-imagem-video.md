@@ -85,13 +85,30 @@ Repositório: `Comfy-Org/Qwen-Image-2.1` (Hugging Face), público e **sem login*
 | `qwen3vl_8b_int8_convrot.safetensors` | 9,35 GB | `text_encoders/` |
 | `qwen_image_2.1_vae_bf16.safetensors` | 0,68 GB | `vae/` |
 
-**Total: ~17,3 GB** (modelos do ComfyUI somam agora ~91 GB). SHA-256 dos 3 arquivos conferido contra o Hugging Face em 09/10/2026. Não foi baixado o *prompt enhancer* opcional (9,47 GB), que o template oficial deixa desligado.
+**Total: ~17,3 GB** (modelos do ComfyUI somam agora ~98 GB). SHA-256 dos 3 arquivos conferido contra o Hugging Face em 09/10/2026. Não foi baixado o *prompt enhancer* opcional (9,47 GB), que o template oficial deixa desligado.
 
 !!! danger "Licença Qwen Research — uso não comercial"
     - O uso é permitido **somente para pesquisa ou avaliação** ("Non-Commercial"). **Qualquer uso comercial exige licença separada** da Qwen (`model-business@notice.qwencloud.com`). Usar as imagens geradas em materiais da empresa pode ser considerado uso comercial — em caso de dúvida, perguntar a eles antes.
     - Se o modelo ou suas saídas forem usados para criar, treinar ou melhorar **outro modelo de IA** distribuído, é preciso exibir "Built with Qwen" / "Improved using Qwen".
     - A lei aplicável é a da China, com foro em Hangzhou; quebra dos termos obriga a apagar o material.
     - **Hoje o Qwen-Image 2.1 está instalado apenas para avaliação.** Alternativa **Apache 2.0** (não instalada): Qwen-Image 2512, ~30 GB, mais pesado em 16 GB — ver [ADR-009](16-apendices/adrs.md#adr-009).
+
+### FLUX.2 klein 4B — edição de imagens <span class="badge badge-existe">Existe — 09/10/2026</span>
+
+Modelo de 4 bilhões de parâmetros da Black Forest Labs, **Apache 2.0** e sem restrição de acesso. Versão **distilled em fp8** (4 passos), a do template oficial `image_flux2_klein_image_edit_4b_distilled`.
+
+| Peça | Origem | Tamanho | Pasta (em `/dados/modelos/comfyui/`) |
+|---|---|---|---|
+| `flux-2-klein-4b-fp8.safetensors` | `black-forest-labs/FLUX.2-klein-4b-fp8` | 4,07 GB | `diffusion_models/` |
+| `flux2-klein-vae-apache.safetensors` | `black-forest-labs/FLUX.2-klein-4B`, arquivo `vae/diffusion_pytorch_model.safetensors` | 0,17 GB | `vae/` |
+| Text encoder | **reaproveitado:** `qwen_3_4b_fp8_mixed.safetensors` (o mesmo Qwen3-4B do Z-Image) | 0 GB novos | `text_encoders/` |
+
+**Download novo: ~4,24 GB.** SHA-256 dos 2 arquivos conferido em 09/10/2026. Armazenamento total dos modelos do ComfyUI: **98 GB** (91 GiB pelo `du`).
+
+!!! info "Decisão sobre o VAE (licença)"
+    O template do ComfyUI aponta para `Comfy-Org/flux2-dev/.../flux2-vae.safetensors` (0,34 GB), mas esse repositório está marcado com a licença **não comercial do FLUX [dev]**. **Não foi usado.** Em seu lugar foi usado o VAE que o **próprio repositório Apache do klein** distribui, em formato diffusers, e que o ComfyUI carregou normalmente no `VAELoader`. Não foi verificado se os pesos são idênticos aos do arquivo do Comfy-Org (podem diferir em precisão: 0,17 GB contra 0,34 GB).
+
+**Ressalvas do modelo:** o template usa o encoder `qwen_3_4b` em bf16 (8,04 GB); aqui foi usado o **fp8_mixed** já instalado e funcionou, mas **não houve comparação A/B** com o bf16. A BFL recomenda implementar filtros de conteúdo ao usar o klein. A versão **9B** do klein tem licença **não comercial** e não foi instalada.
 
 ## 8A.4 Instalação — procedimento reproduzível <span class="badge badge-existe">Existe</span>
 
@@ -259,6 +276,18 @@ O download levou cerca de 40 min nesta rede. Conferir os SHA-256 contra o public
 
 URL base: `https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/<pasta>/<arquivo>`. Depois: conferir SHA-256 e reiniciar o ComfyUI. O workflow está em `bench/qwen.py` (`wf_qwen2512`) e roda com `bench.py --imagem qwen2512`, **que só funciona com os arquivos reinstalados**. A LoRA opcional de 4 passos (`Qwen-Image-2512-Lightning-4steps-V1.0`, 1,58 GB, repositório `lightx2v/Qwen-Image-2512-Lightning`) **não foi testada**.
 
+**6E. Baixar o FLUX.2 klein 4B** (público, sem token; `curl` retomável como nos passos 6C e 6D):
+
+```bash
+B=/dados/modelos/comfyui
+curl -L -C - --fail -o $B/diffusion_models/flux-2-klein-4b-fp8.safetensors \
+  https://huggingface.co/black-forest-labs/FLUX.2-klein-4b-fp8/resolve/main/flux-2-klein-4b-fp8.safetensors
+curl -L -C - --fail -o $B/vae/flux2-klein-vae-apache.safetensors \
+  https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/resolve/main/vae/diffusion_pytorch_model.safetensors
+```
+
+Conferir os SHA-256 (campo `lfs.oid` da API de árvore de cada repositório) e reiniciar o ComfyUI. O encoder **não** precisa ser baixado: usa-se o `qwen_3_4b_fp8_mixed.safetensors` do Z-Image. O download levou poucos minutos.
+
 **7. Reiniciar o serviço** para o ComfyUI indexar os modelos novos:
 
 ```bash
@@ -382,6 +411,32 @@ O Qwen-Image 2.1 só pode ser usado para avaliação ([ADR-009](16-apendices/adr
 !!! warning "Limites"
     Um único item (I5), 3 sementes a 1024² e 2 a 1328², leitura visual do assistente. I2 e I3 não foram rodados com o 2512, e a LoRA de 4 passos não foi testada — a qualidade de texto com ela é desconhecida.
 
+### FLUX.2 klein 4B — edição de imagens <span class="badge badge-existe">Existe — 09/10/2026</span>
+
+Rodada `2026-10-09_2147_flux2edit` do PASES-Bench Visual: **4 edições × 3 sementes = 12 gerações, 0 falhas**. As imagens-base (`bench/fixtures/E_*.jpg`) vêm do Z-Image (rodada de 08/10). Parâmetros do template: **4 passos, CFG 1**, `euler`, referência reduzida a ~1 megapixel (o tamanho da saída segue a primeira imagem); em edições, a(s) imagem(ns) entram como `ReferenceLatent` no condicionamento positivo e no negativo (zerado).
+
+| Medida | Valor |
+|---|---|
+| Tempo por edição, 1 imagem (mediana) | **5 s** (a 1ª, a frio: 27 s) |
+| Edição com 2 referências (E4) | **9 s** |
+| Pico de VRAM | **12,6 GB** |
+| Pico de RAM do sistema | 19,6 GB |
+| Pico de temperatura / potência (2 GPUs) | 71 °C / 156 W |
+
+**Qualidade — leitura do assistente nas folhas de contato (3 sementes por item). A ficha de avaliação humana é a que vale e ainda não foi preenchida.**
+
+| Item | Edição pedida | Resultado |
+|---|---|---|
+| **E1** — cor | Armário branco → verde-escuro, mantendo puxadores, forma e fundo | **Muito bom nas 3.** Cor trocada; formato, puxadores, prateleira e gavetas preservados. Mudança indevida pequena: o fundo ficou um pouco mais frio |
+| **E2** — material | Madeira clara → nogueira escura, mantendo o resto | **Troca muito boa e consistente nas 3**, preservando janela, objetos e luz. **Mudança indevida:** o piso de concreto virou piso de madeira escura, embora o prompt falasse só de superfícies de madeira |
+| **E3** — remoção | Remover a panela preta da bancada | **Excelente nas 3.** A panela sumiu, a bancada foi reconstruída, e a panela decorativa da parede foi corretamente mantida |
+| **E4** — 2 referências | Colocar o armário da imagem 2 na sala da imagem 1 | **Fraco.** A sala foi preservada, mas o armário **não manteve a identidade**: em duas sementes virou um trecho branco do balcão e na terceira surgiu um armário alto diferente do da referência |
+
+**Conclusão:** para **edições simples** (cor, material, remoção de objeto) o klein 4B é rápido e confiável, o que o torna útil para variações de acabamento e retoques de projeto. Para **compor objetos de duas imagens** ele ainda reinterpreta a referência e não serve.
+
+!!! warning "Limites"
+    3 sementes por item, leitura visual do assistente. Uma variante só (4B distilled fp8) com o encoder fp8 reaproveitado, sem A/B contra o bf16. O E2 mostra que prompts de material podem **vazar para o piso**: convém dizer explicitamente o que **não** deve mudar.
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
@@ -400,9 +455,10 @@ cd /srv/pases/comfyui-config/bench
 /srv/pases/comfyui/.venv/bin/python -I bench.py --modelo ltx       # só vídeo + F1/F2, com o LTX 2.5, ~12 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen      # só imagens (I1–I5), com o Qwen-Image 2.1, ~5 min
 /srv/pases/comfyui/.venv/bin/python -I bench.py --imagem qwen2512  # Qwen-Image 2512 (~55 min; exige reinstalar os arquivos, ver passo 6D)
+/srv/pases/comfyui/.venv/bin/python -I bench.py --edicao          # só edição de imagens (E1–E4), com o FLUX.2 klein 4B, ~3 min
 ```
 
-Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **I5** bloco de texto longo em português com acentos (adicionado em 09/10/2026) · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
+Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · **I3** mockup de tela de ERP · **I4** composição precisa · **I5** bloco de texto longo em português com acentos (adicionado em 09/10/2026) · **V1** vídeo curto · **V3** imagem para vídeo · **V4** movimento complexo (mãos lixando madeira) · **V2** 720p de 5 s · **F1** primeiro e último quadro (reconstrução) · **F2** primeiro e último quadro (transição entre cenas) — **E1** edição: mudar a cor · **E2** edição: trocar o material · **E3** edição: remover um objeto · **E4** edição com duas imagens de referência — os itens `E*` só rodam com `--edicao`; os itens `F*` só rodam com `--modelo ltx`, e seus extremos ficam em `bench/fixtures/` (896×512). A qualidade é avaliada por humano (0 a 2 por critério, ficha no relatório); as metas operacionais continuam **provisórias** até a primeira revisão humana. O modelo de visão local (Qwen3-VL) pode servir de triagem, nunca de juiz.
 
 **Linha de base das imagens** (Z-Image-Turbo, 12 gerações, 0 falhas): mediana de **12 s** por imagem 1024², pico de 76 °C e 169 W. A 1ª geração a frio levou 50 s.
 
@@ -489,8 +545,9 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | **MiniMax H3** | Pesos abertos desde 03/08/2026 (33B parâmetros), com suporte nativo no ComfyUI. A versão aberta sai em **no máximo 768p**; o upscaler de 2K é só da API. Um site afirma restrição de licença para uso em EUA/UE/Reino Unido/Coreia — **não confirmado**; ler a licença no Hugging Face antes de qualquer investimento. |
 | **Qwen-Image 2.1** | **Instalado para avaliação** (seção 8A.3): melhor que o Z-Image em texto com acentos, mas licença **só não comercial** — decisão em [ADR-009](16-apendices/adrs.md#adr-009). |
 | **Qwen-Image 2512** (fp8, Apache 2.0) | **Testado e removido (09/10/2026):** texto com erros em todas as imagens, 218–370 s por imagem. Não é alternativa ao 2.1 nem ao Z-Image ([8A.5](#qwen-image-2512-apache-20-reprovado-e-removido-existe-09102026)). |
-| **FLUX.2 klein 4B** | Bom para edição e multi-referência, Apache 2.0. Candidato. |
-| **FLUX.2 [dev]** | Descartado: pede 24 GB ou mais e a licença é não comercial. |
+| **FLUX.2 klein 4B** | **Instalado e aprovado para edições simples** (cor, material, remoção) a 5 s; fraco em compor objetos de duas imagens ([8A.5](#flux2-klein-4b-edicao-de-imagens-existe-09102026)). Apache 2.0; decisão em [ADR-010](16-apendices/adrs.md#adr-010). |
+| **FLUX.2 [dev]** | Descartado: pede 24 GB ou mais e a licença é não comercial. O repositório `Comfy-Org/flux2-dev` também foi evitado por esse motivo (ver o VAE em 8A.3). |
+| **FLUX.2 klein 9B** | Licença **não comercial**; não instalado. |
 | **Wan 2.2 A14B** (GGUF Q4) | Mais qualidade de movimento que o 5B, mas apertado em 16 GB e sem áudio. Perdeu urgência diante do LTX 2.5; reavaliar só se surgir uma limitação do LTX. |
 | **Wan 2.2 5B** | **Mantido** como alternativa de licença limpa (Apache 2.0), mas deixou de ser o modelo principal de vídeo. |
 | **WanGP** (`deepbeepmeep/Wan2GP`) | Interface alternativa com gestão agressiva de memória (afirma H3 de 15 s em 1080p com ~11 GB de VRAM — alegação do projeto, não verificada). Visto em vídeo de terceiros em 08/10/2026. **Adiado:** o LTX 2.5 já roda bem no ComfyUI; reconsiderar se a RAM apertada ou vídeos de 720p mais longos virarem problema. Se for testado: `git clone` + `uv` em `/srv/pases/wan2gp`, fora do Git, só em `127.0.0.1`. |
@@ -515,6 +572,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | Licença do LTX 2.5 (gratuita só abaixo de US$ 10 mi de receita anual do grupo) | Enquadramento declarado em 08/10/2026; reavaliar com o crescimento da empresa; ver aviso na seção 8A.3 |
 | Token do Hugging Face em texto simples em `~/.cache/huggingface/token` | Token só de leitura, **revogado no site em 08/10/2026** (informado pelo responsável; o `hf auth whoami` falha, o que confirma). O arquivo local fica inútil e pode ser apagado com `hf auth logout` |
 | **Qwen-Image 2.1 sob licença não comercial** | Usar só para avaliação; não incluir em materiais da empresa sem licença comercial da Qwen — a alternativa Apache (2512) foi testada e reprovada; sem licença, usar o Z-Image; ver [ADR-009](16-apendices/adrs.md#adr-009) |
+| **VAE do FLUX.2 com licença ambígua** (repositório `Comfy-Org/flux2-dev` marcado como não comercial) | Usado o VAE do repositório Apache do klein; pesos **não comparados** com o do Comfy-Org (8A.3) |
 | Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; Z-Image-Turbo e Wan 2.2 são Apache 2.0 (Hugging Face, 07/10/2026); o **LTX 2.5** e o **Qwen-Image 2.1** têm licenças próprias (seção 8A.3) |
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
@@ -525,7 +583,9 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 - **Decidir a licença do Qwen-Image 2.1** (licenciar, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)
 - Avaliação humana dos resultados do Qwen-Image 2.1 e dos itens I1/I4 com ele
 - (Opcional) testar a LoRA Lightning de 4 passos do 2512, se um dia o 2512 voltar a ser considerado
-- Próxima rodada de modelos (FLUX.2 klein para edição; Wan A14B) após benchmark
+- Avaliação humana das edições do FLUX.2 klein; A/B do encoder fp8 contra o bf16 do template
+- Testar o FLUX.2 klein em texto→imagem e prompts que digam o que **não** deve mudar (caso do piso no E2)
+- Próxima rodada de modelos (Wan A14B) após benchmark
 - Validar o `Linger` em um reboot real e apagar o token local (`hf auth logout`)
 - Workflows do ComfyUI versionados e backup deles ([Cap. 14](14-backup.md))
 - Integração com o AI Gateway ([ADR-004](16-apendices/adrs.md#adr-004)) — hoje o ComfyUI é usado só pela interface web local

@@ -8,6 +8,7 @@
 | **ComfyUI** | Interface e motor de execução, em grafo de nós, para modelos de imagem e vídeo. Não é um modelo — carrega os arquivos de modelo (Capítulo 8A). |
 | **Embedding** | Representação numérica (vetor) de um texto, usada para busca por similaridade no RAG. |
 | **EXPO** | Perfil de overclock de memória da AMD (equivalente ao XMP da Intel). |
+| **FLUX.2 klein** | Família de modelos de imagem da Black Forest Labs; a versão de 4 bilhões de parâmetros (Apache 2.0) edita imagens a partir de referências e está instalada na estação (Capítulo 8A, ADR-010). A versão 9B tem licença não comercial. |
 | **HWE** | *Hardware Enablement* — kernels e drivers mais novos disponibilizados no Ubuntu LTS para suportar hardware recente. |
 | **Inferência** | Execução de um modelo de IA já treinado (gerar texto, código etc.), em oposição a treinamento. |
 | **LLM** | *Large Language Model* — modelo de linguagem de grande porte (Claude, Llama, Qwen etc.). |

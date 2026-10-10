@@ -302,3 +302,46 @@ O ganho é real em texto com acentos e números, mas **não resolve interface de
 
 ### Atualização (2026-10-09) — Qwen-Image 2512 testado e removido
 O 2512 (Apache 2.0) foi baixado (30,07 GB, SHA-256 conferido) e testado no item de texto longo (I5), com os parâmetros do template oficial (50 passos, CFG 4): **0 de 3 imagens com texto correto a 1024²** e **0 de 2 à resolução nativa de 1328²**, a **218 s** e **370 s** por imagem (contra 12 s do Z-Image e 18 s do Qwen 2.1), com pico de 37,7 GB de RAM. Foi **descartado e apagado do disco**; o procedimento de reinstalação ficou no [Cap. 8A, passo 6D](../08a-imagem-video.md). Consequência para esta decisão: não existe alternativa Apache melhor que o **Z-Image-Turbo** para texto em imagem; a escolha real é entre **licenciar o Qwen-Image 2.1** (melhor texto) e **ficar com o Z-Image**. Limites: um item, poucas sementes, leitura visual do assistente; a LoRA de 4 passos do 2512 não foi testada.
+
+---
+
+## ADR-010 — FLUX.2 klein 4B para edição de imagens, com VAE do repositório Apache {#adr-010}
+
+**Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-09
+
+### Objetivo
+Ter na estação um modelo de **edição de imagens** (mudar cor, material, remover objetos) rápido e de licença livre, para variações de acabamento e retoques de projetos de móveis.
+
+### Alternativas avaliadas
+- **FLUX.2 klein 4B** (escolhido): 4 B de parâmetros, **Apache 2.0**, edição com imagens de referência, versão distilled em fp8 de 4,07 GB.
+- **FLUX.2 klein 9B:** licença **não comercial**. Não instalado.
+- **FLUX.2 [dev]:** 24 GB ou mais e licença não comercial. Descartado.
+- **Qwen-Image 2.1** (tem variantes de edição): licença não comercial ([ADR-009](#adr-009)); não testado para edição.
+- **Edição "no Photoshop" manual:** fora do escopo da plataforma.
+
+### Decisão
+Adotar o **FLUX.2 klein 4B distilled fp8** no ComfyUI, com o encoder `qwen_3_4b_fp8_mixed` **reaproveitado do Z-Image** (sem novo download) e, para o **VAE**, o arquivo `vae/diffusion_pytorch_model.safetensors` do **repositório Apache** `black-forest-labs/FLUX.2-klein-4B`, **não** o `flux2-vae` do `Comfy-Org/flux2-dev`, que o template oficial cita mas cujo repositório está marcado com a licença **não comercial** do FLUX [dev]. Uso previsto: edições simples. **Não usar para compor objetos de duas imagens.**
+
+### Justificativa
+Resultados de 09/10/2026 (suíte PASES-Bench Visual, item `E*`; [Cap. 8A.5](../08a-imagem-video.md)):
+
+| Edição | Resultado |
+|---|---|
+| Mudar a cor (E1) | Muito bom nas 3 sementes |
+| Trocar o material (E2) | Muito bom, mas o piso também mudou |
+| Remover um objeto (E3) | Excelente nas 3 |
+| Compor 2 imagens (E4) | Fraco: o objeto de referência perde a identidade |
+
+Tempo de **5 s** por edição (9 s com 2 referências), 12,6 GB de VRAM, 19,6 GB de RAM, 71 °C, sem falhas. O download novo foi de só ~4,24 GB, e o VAE Apache carregou normalmente no ComfyUI.
+
+### Consequências e riscos
+- **VAE não comparado:** não foi verificado se os pesos do VAE Apache (0,17 GB, formato diffusers) são idênticos aos do arquivo do Comfy-Org (0,34 GB). Os resultados foram bons, mas uma diferença sutil de qualidade não está descartada.
+- **Encoder fp8 sem A/B:** o template usa o `qwen_3_4b` em bf16; aqui foi usado o fp8 já instalado. Funcionou, mas não foi comparado.
+- **Vazamento de edição:** no teste de material, o piso (concreto) também virou madeira. Prompts devem dizer o que **não** pode mudar.
+- **Filtros de conteúdo:** a BFL recomenda implementar filtros nos modelos klein; a estação não os tem (uso interno, sem exposição na rede).
+- **Avaliação limitada:** 3 sementes por item e leitura visual do assistente; avaliação humana pendente.
+
+### Quando revisar
+- **A avaliação humana contrariar** a leitura do assistente, ou o A/B com o encoder bf16 mostrar ganho relevante.
+- **Surgir necessidade de composição de objetos** (E4): testar outras variantes ou modelos.
+- **Mudança da licença do klein 4B** ou de qualquer repositório usado.
