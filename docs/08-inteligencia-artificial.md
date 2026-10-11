@@ -39,7 +39,7 @@ Notas de operação:
 !!! note "Devstral Small 2 é a escolha inicial — não um casamento"
     Programação é o uso principal da estação, e o Devstral entra como cérebro por reunir agentic + generalista + visão + 256k num único modelo de 16 GB. Mas a escolha é **explicitamente provisória**: se a qualidade de código não atingir os critérios da seção 8.2, o primeiro teste comparativo é contra o **Qwen3-Coder** (ou o equivalente de código da época), rodando o PASES-Bench completo nos dois. Vence o que os números disserem.
 
-    **Atualização (11/10/2026):** o Devstral foi removido por resultados insatisfatórios e o Qwen3-Coder entrou em uso, **mas o PASES-Bench v1 completo não foi executado em nenhum dos dois** — a troca se apoia na avaliação do responsável e na medição de velocidade da seção 8.3, não nos critérios da seção 8.2.
+    **Atualização (11/10/2026):** o Devstral foi removido por resultados insatisfatórios e o Qwen3-Coder entrou em uso. O PASES-Bench v1 foi executado **só no Qwen3-Coder**, com **fixtures sintéticas** (seção 8.9): ficou **abaixo da meta de precisão em código** (62,4% contra 90%), puxado pela refatoração. **Nunca foi executado no Devstral**, então não há comparação.
 
 ## 8.2 Critérios de permanência e PASES-Bench <span class="badge badge-planejado">Planejado</span>
 
@@ -56,6 +56,9 @@ A permanência de um modelo no time é decidida por **critérios objetivos**, n�
 | Qualidade em português | Sem erros graves | Avaliação manual do item 5 |
 
 ### PASES-Bench v1 — suíte padronizada de promoção
+
+!!! note "Estado das fixtures (11/10/2026)"
+    As **fixtures oficiais** descritas abaixo (módulo real do Moventus, imagem do Promob, PDF escaneado) **nunca existiram**. Em 11/10/2026 foi executada uma versão com **fixtures sintéticas** de marcenaria e testes automáticos para os itens 1, 2, 5 e 6, apenas no Qwen3-Coder — ver a seção 8.9. Os itens 3 e 4 (visão) não se aplicam a modelos só de texto e **seguem sem execução**.
 
 Nenhum modelo entra em uso oficial (e nenhum é substituído) sem uma execução completa da suíte — **sempre a mesma**, para que gerações futuras de modelos sejam comparáveis em condições idênticas:
 
@@ -94,9 +97,9 @@ Série histórica de medições reais na estação (condições: Ollama, respost
 | Geração, 2ª chamada (a quente) | **149,5 tok/s** |
 | Temperatura / potência durante a geração | 52–57 °C / 66 e 95 W (GPU 0 e 1) |
 
-Cumpre com folga a meta de velocidade (≥ 20 tok/s) da seção 8.2. **Limites:** um único prompt e duas chamadas; **não mede qualidade** (o PASES-Bench v1 não foi executado), e a diferença entre a 1ª e a 2ª chamada mistura aquecimento com variação. Como ocupa 22 dos ~28,5 GB de VRAM somados, **não convive com o ComfyUI gerando vídeo** na 5060 Ti (descarregar com `ollama stop qwen-cline`).
+Cumpre com folga a meta de velocidade (≥ 20 tok/s) da seção 8.2. **Limites:** um único prompt e duas chamadas; **não mede qualidade** (a qualidade foi medida depois, na seção 8.9), e a diferença entre a 1ª e a 2ª chamada mistura aquecimento com variação. Como ocupa 22 dos ~28,5 GB de VRAM somados, **não convive com o ComfyUI gerando vídeo** na 5060 Ti (descarregar com `ollama stop qwen-cline`).
 
-Pendente: execução completa do PASES-Bench v1 com as fixtures oficiais.
+Pendente: o PASES-Bench v1 com as fixtures **oficiais** (arquivos reais do Moventus, do Promob e uma nota fiscal escaneada). A versão com fixtures sintéticas foi executada em 11/10/2026 (seção 8.9).
 
 ## 8.4 Runtime <span class="badge badge-existe">Existe — Ollama</span>
 
@@ -195,7 +198,7 @@ Levantado na própria máquina (`ollama list`, arquivos do ComfyUI, `docker ps`,
 | Modelo | Tamanho | Papel | Observação |
 |---|---|---|---|
 | `qwen3-coder:30b` | 18 GB | Código e agentes | Qwen3-Coder 30B-A3B, Q4_K_M, contexto de 256k, com ferramentas ([ADR-012](16-apendices/adrs.md#adr-012)) |
-| `qwen-cline` | 18 GB (mesmo arquivo) | Código com o Cline | `num_ctx 32768`; velocidade na seção 8.3 |
+| `qwen-cline` | 18 GB (mesmo arquivo) | Código com o Cline | `num_ctx 32768`; velocidade na seção 8.3; precisão na seção 8.9 |
 | `qwen3-vl:8b` | 6,1 GB | Visão e OCR | Benchmark de julho na seção 8.3 |
 | *Devstral Small 2 24B* | — | — | **Removido** (resultados insatisfatórios, informado pelo responsável) |
 
@@ -232,9 +235,59 @@ Open WebUI (porta 3000), LobeChat com SearXNG, PostgreSQL e Redis (`pases-core`,
 4. **"Os modelos FLUX têm tipografia coerente."** No nosso teste o klein 4B errou texto em todas as imagens; o melhor foi o Qwen-Image 2.1.
 5. **"4K nativo" e "duração automática" do LTX 2.5:** **não testados** (só 704×1280 e 1280×704; o arquivo de duração automática não foi baixado).
 
+## 8.9 PASES-Bench v1 (LLM) com fixtures sintéticas — Qwen3-Coder <span class="badge badge-existe">Existe — 11/10/2026</span>
+
+Primeira execução do PASES-Bench v1 em um LLM. Código, fixtures e resultados em `/srv/pases/llm-bench` (README próprio). **Modelo testado:** `qwen-cline` (= `qwen3-coder:30b`, Q4_K_M, com `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, `repeat_penalty 1.05`, os parâmetros que o Cline usa), `num_predict 4096`, sementes 1 a 3, **3 repetições por item**, ComfyUI parado e VRAM livre.
+
+### Por que fixtures sintéticas
+As fixtures oficiais (módulo real do Moventus, imagem do Promob, PDF escaneado) nunca existiram, e o código do Moventus **não está nesta máquina**. Foram criadas fixtures de marcenaria com **testes automáticos**, e cada uma foi **validada antes de testar o modelo**: os testes passam nas soluções de referência (23, 193 e 12 testes), falham no código inicial e **detectam erros plantados** (arredondamento errado, limite de desconto errado, desconto sobre o frete, regras especiais alteradas). O código gerado pelo modelo é **executado localmente** (pasta temporária, ambiente mínimo, timeout de 120 s); os testes ocultos nunca são mostrados ao modelo.
+
+### Resultado contra as metas do Cap. 8.2
+
+| Critério | Meta | Medido | |
+|---|---|---|---|
+| Velocidade de geração | ≥ 20 tok/s | **128–148 tok/s** (itens de texto 136–148; agente ~130) | ✅ |
+| Tempo até o 1º token, a quente | ≤ 3 s | **0,1 s** (prompt curto, mediana de 5); 0,14–0,39 s nos itens | ✅ |
+| Sem transbordo para a RAM | 100% GPU | **100% GPU**, 22 GB; pico de VRAM 10,5 GB (4070) e 12,5 GB (5060 Ti) | ✅ |
+| RAM do sistema | ≤ 75% (~48 GB) | pico de **11,8 GB** | ✅ |
+| **Precisão em código** (itens 1, 2 e 6) | **≥ 90%** | **62,4%** | ❌ |
+| Português sem erros graves (item 5) | sem erros graves | verificação automática ok; **revisão humana pendente** | ⏳ |
+| Precisão em visão (itens 3 e 4) | ≥ 90% | **não se aplica** (modelo só de texto) | — |
+
+Temperatura máxima 64 °C e potência somada das GPUs de 202 W. **Carga a frio de 4,2 s:** não é comparável à de 74,5 s da seção 8.3, porque desta vez o arquivo do modelo já estava no cache do sistema operacional.
+
+### Precisão por item
+
+| Item | Rep. 1 | Rep. 2 | Rep. 3 | Média | O que aconteceu |
+|---|---|---|---|---|---|
+| **1. Gerar código** (módulo de orçamento) | 20/23 | 19/23 | 23/23 | **89,9%** | Falhas reais: `'int' object has no attribute 'quantize'` num orçamento vazio (soma de lista vazia dá `int`) nas repetições 1 e 2, e, na 2, não somou as quantidades dos itens agrupados |
+| **2. Refatorar** (193 testes de comportamento) | 0 | 0 | 0 | **0%** | **O código refatorado quebra em toda chamada nas 3 repetições**: `NameError: name 'cupom' is not defined`, porque uma função auxiliar usa `cupom` sem recebê-lo. Confirmado rodando o código dele; **não é falha do teste**. A estrutura melhorou (5 a 6 funções, a maior com 22–30 linhas contra 58 do original), mas o comportamento não se preserva |
+| **5. Pergunta de negócio** | ok | ok | ok | 3/3 | Lucro **R$ 1.116,50** e margem ~23%, em português e em 5 a 6 linhas (limite de 6) |
+| **6. Tarefa de agente** (reserva de chapas, vários arquivos) | 11/12 | 12/12 | 12/12 | **97,2%** | 10 passos por repetição (1 `list_files`, 4 `read_file`, 3 `write_file`, 1 `run_tests`); rodou os testes antes de terminar; atualizou os testes visíveis (todos passam: 14, 13 e 12 testes). Na repetição 1, `reservar` não levantou o `ValueError` ao exceder o disponível |
+
+**Precisão em código = média dos itens 1, 2 e 6 = (89,9 + 0 + 97,2) / 3 = 62,4%.** Sem o item 2 seria 93,5%, mas **isso não é a nota oficial**: retirar o pior item não é medir.
+
+### O que isso significa
+- Como **agente** (o uso com o Cline) o modelo foi muito bem; como **refatorador**, introduziu um erro que derruba tudo e **o repetiu nas três tentativas**. Uma falha repetível pesa mais que uma ocasional.
+- A troca do Devstral pelo Qwen3-Coder ([ADR-012](16-apendices/adrs.md#adr-012)) **permanece** (decisão do responsável), mas agora com um dado: o modelo atual **reprova no critério de precisão em código** deste benchmark. **O Devstral nunca foi executado nesta suíte**; não dá para dizer qual é melhor.
+
+### Limites
+- **Uma fixture por item**, escrita pelo assistente, de tema único; uma refatoração diferente poderia se sair melhor ou pior.
+- 3 repetições com temperatura 0,7: há variação, e a diferença entre 89,9% e a meta de 90% do item 1 **está dentro dessa variação**.
+- A checagem do item 5 é automática (números, português por palavras frequentes e contagem de linhas); a **qualidade do português é avaliação humana** e não foi feita. Respostas em `results/<rodada>/i5_rep*.txt`.
+- Os testes ocultos medem o que a especificação **disse**; um comportamento razoável que a especificação não cobre não é medido.
+- A rodada fica em `results/2026-10-11_1733_qwen-cline/`. O campo `visiveis` do `resultado.json` dessa rodada mostra contagens enganosas (o modelo **acrescentou** testes); o executor já foi corrigido.
+
+### Como repetir
+```bash
+cd /srv/pases/llm-bench && ./bench_llm.py --validar && ./bench_llm.py --modelo qwen-cline --reps 3
+```
+O ComfyUI precisa estar parado (VRAM livre) e `ollama ps` vazio.
+
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - Instalação do Ollama e benchmark real de cada modelo na estação (tok/s medidos)
+- Repetir o item 2 (refatoração) com **outra fixture**, rodar o PASES-Bench com as **fixtures oficiais** (Moventus, Promob, nota fiscal) e os itens de **visão** no `qwen3-vl:8b`
 - Papel do Claude no fluxo de trabalho ([ADR-003](16-apendices/adrs.md#adr-003))
 - AI Gateway ([ADR-004](16-apendices/adrs.md#adr-004)) — ferramenta e configuração
 - Cache de respostas e controle de custo

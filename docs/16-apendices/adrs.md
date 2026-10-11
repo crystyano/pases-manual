@@ -414,13 +414,16 @@ Usar o **Qwen3-Coder 30B-A3B**, quantização Q4_K_M, via Ollama (`qwen3-coder:3
 - Por ser um modelo MoE com ~3 B de parâmetros ativos, é muito mais rápido que o Devstral denso (27,6 tok/s).
 
 ### Consequências e riscos
-- **Qualidade não medida por nós:** o PASES-Bench v1 **não foi executado** nem para o Devstral nem para o Qwen3-Coder; a decisão repousa na avaliação do responsável.
+- **Qualidade medida só em parte (ver a atualização abaixo):** o PASES-Bench v1 foi executado **só no Qwen3-Coder** e com fixtures sintéticas; **nunca no Devstral**. A decisão repousa na avaliação do responsável.
 - **22 GB de VRAM** dos ~28,5 GB somados: **não convive com o ComfyUI gerando vídeo** na 5060 Ti; é preciso `ollama stop qwen-cline` antes (regra em [Cap. 8A.6](../08a-imagem-video.md)).
 - O **Ollama escuta em todas as interfaces, sem autenticação** ([Cap. 13](../13-seguranca.md)).
 - Uma única medição de velocidade (1 prompt, 400 tokens, 2 chamadas).
 
 ### Quando revisar
-- Ao executar o **PASES-Bench v1** e o resultado divergir da avaliação atual.
+- Ao executar o **PASES-Bench v1 com as fixtures oficiais** (ou em outro modelo) e o resultado divergir da avaliação atual.
 - Surgir candidato melhor (Qwen 3.6 27B ou outro) na mesma faixa de VRAM.
 - Se a convivência com o ComfyUI virar um incômodo frequente (reabrir a discussão de mais VRAM).
+
+### Atualização (2026-10-11) — PASES-Bench v1 executado no Qwen3-Coder
+Executado com **fixtures sintéticas** (3 repetições; [Cap. 8.9](../08-inteligencia-artificial.md)). **Operacional: todas as metas cumpridas** (128–148 tok/s, 0,1 s até o 1º token, 100% GPU, RAM de pico 11,8 GB). **Precisão em código: 62,4%, abaixo da meta de 90%**: geração de código 89,9%, **refatoração 0%** (o código refatorado quebra sempre, `NameError: cupom`, nas 3 repetições) e tarefa de agente 97,2%. A decisão **se mantém** (é do responsável), mas deixa de se apoiar só em avaliação subjetiva: há agora um resultado que **reprova o modelo em refatoração**. Limites: uma fixture por item, 3 repetições, sem execução no Devstral e sem os itens de visão. Revisão a fazer: repetir a refatoração com outra fixture e, havendo candidato, rodar a mesma suíte nele.
 
