@@ -321,7 +321,22 @@ Medições reais na estação, sempre com **uma geração por vez**, GPUs com o 
 
 ### LTX 2.5 × Wan 2.2 5B — mesma suíte de vídeo <span class="badge badge-existe">Existe — 08/10/2026</span>
 
-Rodada `2026-10-08_2320_ltx` do **PASES-Bench Visual v1** (seção 8A.5b), com os mesmos prompts, sementes e durações do Wan (rodada `2026-10-08_1800`). Mesmas condições: uma geração por vez, Devstral descarregado, power limit permanente das GPUs. **10 gerações, 0 falhas, todas com áudio e na resolução pedida.**
+!!! danger "Correção (11/10/2026) — os vídeos do LTX desta rodada tinham um defeito de configuração meu"
+    Todos os vídeos do LTX gerados até 10/10/2026 saíram com uma **queda de nitidez a cada 8 quadros** (o "piscar com borrão"). A causa foi um erro meu ao copiar o template: o nó `VAEDecodeTiled` foi configurado com `temporal_size 16` e `temporal_overlap 8`, quando o template oficial usa **64 e 16**; blocos de 16 quadros com sobreposição de 8 criam uma emenda a cada 8 quadros. O benchmark **não acusou** o defeito e as conclusões abaixo foram tiradas sem ele. Corrigido em `bench/ltx.py` e `bench/extend.py`, a suíte do LTX foi **repetida** (rodada `2026-10-11_0055_ltx`) e uma **métrica objetiva de piscar** (`bench/qualidade.py`) passou a fazer parte de todo relatório.
+
+    **Efeito, medido** (oscilação de nitidez em relação à média móvel de 9 quadros; mediana e, entre parênteses, o pior caso; quedas = quadros com nitidez >15% abaixo da média):
+
+    | Item | Wan 2.2 5B | LTX **antes** da correção | LTX **corrigido** |
+    |---|---|---|---|
+    | V1 — vídeo curto | 5,0% (13,0%) · 4 quedas | 22,7% (25,7%) · 8 quedas | **2,3% (3,0%)** · 0 quedas |
+    | V3 — imagem para vídeo | 3,6% (4,8%) · 0 | 7,1% (10,4%) · 3 | **1,8% (1,8%)** · 0 |
+    | V4 — movimento complexo | 5,6% (9,2%) · 3 | 9,0% (13,0%) · 5 | 6,8% (12,4%) · 6 |
+    | V2 — 720p, 5 s | 1,1% (1,3%) · 0 | 23,4% (26,0%) · 27 | **3,5% (3,7%)** · 0 |
+
+    No **V4** (mãos lixando) a oscilação segue alta nos dois modelos porque ali a nitidez varia por causa do **movimento real** (desfoque de movimento), não de um defeito: a métrica não separa defeito de conteúdo em cenas de muito movimento. **Tempos e memória não mudaram** (V1 19,0 s · V3 34,5 s · V4 19,0 s · V2 83,8 s; RAM ~51 GB), e a leitura visual por quadros abaixo continua valendo. Com a correção o LTX fica na faixa do Wan em nitidez e mantém a vantagem de velocidade, de movimento e de áudio.
+
+
+Rodada `2026-10-08_2320_ltx` (**afetada pelo defeito acima**; repetida em `2026-10-11_0055_ltx`) do **PASES-Bench Visual v1** (seção 8A.5b), com os mesmos prompts, sementes e durações do Wan (rodada `2026-10-08_1800`). Mesmas condições: uma geração por vez, Devstral descarregado, power limit permanente das GPUs. **10 gerações, 0 falhas, todas com áudio e na resolução pedida.**
 
 | Item | Wan 2.2 5B — mediana (s) | **LTX 2.5 — mediana (s)** | LTX 1ª geração, a frio (s) |
 |---|---|---|---|
@@ -354,6 +369,10 @@ Teste de carga prévio (768×448, 2 s, a frio): 77 s, 70 °C, 162 W, RAM 51,4 GB
     - **RAM no limite:** 50,7 de 59 GB. Com o LTX carregado, não rodar outras cargas pesadas.
 
 ### LTX 2.5 — primeiro e último quadro (flf2v) <span class="badge badge-existe">Existe — 08/10/2026</span>
+
+!!! warning "Correção (11/10/2026)"
+    A rodada original (`2026-10-08_2337_ltx`) foi afetada pelo defeito do VAE temporal descrito na seção anterior. Repetida em `2026-10-11_0055_ltx`: a oscilação de nitidez do **F1** caiu de **11,4% para 1,8%** (3 quedas → 0); no **F2** de 18,6% para 11,4%, que **continua alta por causa do conteúdo** (o meio do vídeo é um *dissolve*/borrão de transição, não um defeito de decodificação). As conclusões abaixo sobre o flf2v **se mantêm**.
+
 
 Template oficial `video_ltx2_5_flf2v`, reproduzido em `bench/ltx.py` (`wf_ltx_flf`). Ao contrário do texto/imagem-para-vídeo, é **um único estágio**, sem upscale latente: o vídeo nasce direto na resolução final (largura e altura **múltiplas de 32**). O primeiro quadro entra por `LTXVAddGuide` com índice 0 e o último com índice -1, ambos com força 0,7; ao fim os guias são removidos (`LTXVCropGuides`). Rodada `2026-10-08_2337_ltx`, 896×512, 49 quadros (2 s), 2 sementes por item. **4 gerações, 0 falhas**, pico de 73 °C e 166 W; **~21 s** por geração com o prompt já em cache (~100 s na 1ª semente de cada prompt, ver seção 8A.6).
 
@@ -439,6 +458,10 @@ Rodada `2026-10-09_2147_flux2edit` do PASES-Bench Visual: **4 edições × 3 sem
 
 ### LTX 2.5 — extensão de vídeo (continuação) <span class="badge badge-existe">Existe — 09/10/2026</span>
 
+!!! warning "Correção (11/10/2026)"
+    A rodada original (`2026-10-09_2208_ltx`) usou o decodificador com o defeito do VAE temporal (veja a seção LTX × Wan). Repetida em `2026-10-11_0055_ltx`: a oscilação de nitidez dos vídeos de extensão caiu de **23,3% para 2,3%** (11 quedas → 0). Tempo (~21 s por extensão) e memória não mudaram. Os saltos nas emendas abaixo foram atualizados; **a conclusão "M1 é melhor que M2" foi enfraquecida** (agora está dentro do ruído).
+
+
 **Não existe template oficial de extensão para o LTX 2.5** (só texto, imagem e primeiro/último quadro). O método aqui é montado com nós do ComfyUI e está em `bench/extend.py`: os **últimos K quadros** do trecho anterior (`LoadVideo` → `GetVideoComponents` → `ImageFromBatch`) viram guia do início do próximo trecho (`LTXVAddGuide`, `frame_idx` 0, força 1,0), num único estágio, como no flf2v. O trecho novo repete esses K quadros; ao **costurar com `ffmpeg`** descartam-se os K primeiros do trecho novo (vídeo e áudio). O **áudio de cada trecho é gerado do zero**, sem condicionamento do anterior.
 
 Rodada `2026-10-09_2208_ltx`, item **X1**: parte do V1 do LTX (2 s) e encadeia **2 extensões de 2 s** (~5,4 a 6 s no total), 896×512, 2 sementes e 2 métodos — **M1** guiado pelo **último quadro** (K = 1) e **M2** pelos **últimos 9 quadros** (K = 9). **8 gerações, 0 falhas.**
@@ -454,12 +477,12 @@ Rodada `2026-10-09_2208_ltx`, item **X1**: parte do V1 do LTX (2 s) e encadeia *
 
 | Método | Vídeo final | Saltos medidos (2 emendas × 2 sementes) |
 |---|---|---|
-| **M1** (1 quadro) | 145 quadros (6,0 s) | 0,91 · 1,09 · 1,23 · 1,29 |
-| **M2** (9 quadros) | 129 quadros (5,4 s) | 1,20 · 1,57 · 1,61 · 1,69 |
+| **M1** (1 quadro) | 145 quadros (6,0 s) | 0,99 · 0,64 · 1,43 · 1,41 *(antes da correção: 0,91–1,29)* |
+| **M2** (9 quadros) | 129 quadros (5,4 s) | 1,37 · 1,01 · 1,58 · 1,30 *(antes: 1,20–1,69)* |
 
-**Leitura visual do assistente** (6 quadros ao redor das emendas de cada vídeo; a avaliação humana é a que vale e não foi feita): nos 4 vídeos, os quadros de cada lado da emenda são praticamente iguais; a câmera segue avançando e a sala e os objetos principais permanecem. **M1 teve emendas mais suaves**; o **M2, que deveria carregar melhor a inércia do movimento, não mostrou vantagem** (saltos maiores, e a semente 102 terminou com muito clarão de luz). Em 6 s os detalhes pequenos mudam (a bancada ganha outros objetos conforme a câmera se aproxima), sem a cena "derreter".
+**Leitura visual do assistente** (6 quadros ao redor das emendas de cada vídeo; a avaliação humana é a que vale e não foi feita): nos 4 vídeos, os quadros de cada lado da emenda são praticamente iguais; a câmera segue avançando e a sala e os objetos principais permanecem. A diferença entre M1 e M2 é pequena e **está dentro do ruído** (saltos de 0,64 a 1,58); o **M2, que deveria carregar melhor a inércia do movimento, não mostrou vantagem** (e a semente 102 terminou com muito clarão de luz). Em 6 s os detalhes pequenos mudam (a bancada ganha outros objetos conforme a câmera se aproxima), sem a cena "derreter".
 
-**Recomendação provisória:** estender com **M1** (último quadro) — mais simples e com emendas mais limpas — e trechos de 2 s; cada extensão custa ~20 s com o prompt de continuação em cache.
+**Recomendação provisória:** estender com **M1** (último quadro) — mais simples, rende mais vídeo útil (145 contra 129 quadros) e sem desvantagem nas emendas — e trechos de 2 s; cada extensão custa ~20 s com o prompt de continuação em cache.
 
 !!! warning "Limites"
     - **Áudio não avaliado** (cada trecho gera o próprio áudio, então pode haver quebra na emenda) e **continuidade da velocidade do movimento não medida** (só a aparência na emenda).
@@ -534,6 +557,7 @@ Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLM
 | `bench.py` | Runner: uma geração por vez, recusa rodar com modelo no Ollama, reinicia o serviço (1ª geração = medida a frio), mede VRAM/RAM/temperatura/potência, aborta acima de 82 °C, gera relatório e folhas de contato |
 | `ltx.py` | Workflow do LTX 2.5 em formato de API (espelha o template oficial: dois estágios, upscale latente ×2, áudio e vídeo juntos; versão imagem-para-vídeo) |
 | `extend.py` | Extensão de vídeo com o LTX 2.5 (item X1): continuação por quadros-guia, costura com `ffmpeg` e métrica do salto nas emendas |
+| `qualidade.py` | **Métrica objetiva de piscar/borrão periódico** (criada em 11/10/2026): oscilação de nitidez em %, autocorrelação em 8 quadros e quadros borrados; vira 3 colunas em todo relatório de vídeo. Vale para **um plano** (cortes e fades geram quedas legítimas). Vídeo limpo: ~1–6%; com o defeito do VAE: 10–28% |
 | `results/` | JSON e relatório de cada rodada, com versões do ambiente e SHA-256 dos modelos |
 
 ```bash
@@ -574,6 +598,7 @@ Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · 
 - **Cada prompt novo custa ~80 s a mais.** O text encoder (14,6 GB) e o transformer (20,5 GB) não cabem juntos na GPU: a cada prompt novo o ComfyUI carrega o encoder, descarrega e recarrega o transformer (visto nos logs). Com o **mesmo prompt e outra semente** o encoder é reaproveitado e a geração leva só ~19 a 21 s (vídeo curto). Na prática: **gere várias sementes por prompt** (ex.: 3 variações seguidas) em vez de trocar de prompt a cada geração. Os ~100 s da 1ª semente de cada item nas tabelas vêm daí, não de uma carga única dos modelos.
 - Templates prontos na interface: `video_ltx2_5_t2v` (texto), `video_ltx2_5_i2v` (imagem) e `video_ltx2_5_flf2v` (primeiro e último quadro — testado, ver seção 8A.5).
 - **Para estender um vídeo** não há template: usar o método do `bench/extend.py` (seção 8A.5). Guarde o vídeo anterior na pasta `input/` do ComfyUI (o `LoadVideo` só lê dali) e use o **mesmo prompt** nas continuações; cada trecho de 2 s custa ~20 s.
+- **`VAEDecodeTiled`: use `temporal_size 64` e `temporal_overlap 16`** (os valores do template). Com 16 e 8 aparece uma queda de nitidez a cada 8 quadros (o "piscar com borrão"); isso aconteceu aqui até 10/10/2026. Confira com `bench/qualidade.py` (`piscar(video)`): oscilação alta (≳10%) **e** autocorrelação em 8 quadros ≳0,6 indicam o defeito.
 
 ### Comandos do serviço
 
@@ -665,13 +690,28 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | Token do Hugging Face em texto simples em `~/.cache/huggingface/token` | Token só de leitura, **revogado no site em 08/10/2026** (informado pelo responsável; o `hf auth whoami` falha, o que confirma). O arquivo local fica inútil e pode ser apagado com `hf auth logout` |
 | **Qwen-Image 2.1 sob licença não comercial** | Usar só para avaliação; não incluir em materiais da empresa sem licença comercial da Qwen — a alternativa Apache (2512) foi testada e reprovada; sem licença, usar o Z-Image; ver [ADR-009](16-apendices/adrs.md#adr-009) |
 | **VAE do FLUX.2 com licença ambígua** (repositório `Comfy-Org/flux2-dev` marcado como não comercial) | Usado o VAE do repositório Apache do klein; pesos **não comparados** com o do Comfy-Org (8A.3) |
+| **Parâmetros do VAE tiled copiados com a ordem trocada** (blocos temporais de 16 quadros e sobreposição 8, em vez de 64 e 16) | Erro meu: queda de nitidez a cada 8 quadros em todos os vídeos do LTX até 10/10/2026, sem o benchmark acusar. Corrigido em 11/10/2026; o `bench/qualidade.py` agora mede o defeito em todo relatório. **Lição:** ao reproduzir um template, conferir os valores pelo **nome do campo** (`object_info`), não pela posição em `widgets_values` |
 | Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; Z-Image-Turbo e Wan 2.2 são Apache 2.0 (Hugging Face, 07/10/2026); o **LTX 2.5** e o **Qwen-Image 2.1** têm licenças próprias (seção 8A.3) |
+
+## 8A.10 Receita: vídeos curtos de um personagem 3D <span class="badge badge-existe">Existe — 11/10/2026</span>
+
+Caso real em que o pipeline desta estação foi usado para produzir dois vídeos verticais (9:16, ~14–16 s, 3 a 4 planos cada) de um mascote 3D, a partir de **uma única imagem de referência** do personagem. O que funcionou e o que não funcionou:
+
+1. **Quadros iniciais com o FLUX.2 klein (edição):** colocar o personagem em cada cenário preservando a identidade (pelagem, cicatriz, olhos, estilo) funciona bem. Gerar **4 variações por plano** (~6 s cada) e escolher.
+2. **Personagem secundário consistente: criar uma referência e usar as duas imagens juntas.** Sem isso, o secundário mudou de desenho entre planos e um quadro saiu com **duas** cobras. Gerou-se uma referência por texto→imagem e os quadros foram editados com **duas referências** (principal + secundário), pedindo "exatamente UM" de cada. Resultado: o mesmo desenho nos três planos. (O mesmo recurso falhou ao compor um *objeto* de outra foto — ver E4 —, mas funciona com personagens do mesmo estilo.)
+3. **Animação:** LTX 2.5 imagem→vídeo, 704×1280, 3 a 5 s por plano, ~100 s por plano (≈80 s a mais a cada prompt novo, por causa do encoder). Descrever no prompt que os personagens **mantêm exatamente o mesmo desenho** ajudou.
+4. **Âncora do último quadro (flf2v) segura o personagem principal mas pode deformar o secundário em movimento** (a cobra virou uma "lagartixa" comprida ao fugir). Melhor: **cortar o plano quando o desvio começa** e fechar com **um plano curto gerado a partir de um quadro final** pronto.
+5. **Montagem com `ffmpeg`:** cortes secos, volume normalizado (`loudnorm`, -16 LUFS; os planos saíram de -22 a -38 dB), fade curto no início e no fim, H.264 + AAC.
+6. **Medir o piscar de cada plano com `qualidade.py` antes de montar.** Foi o que localizou o defeito do VAE: os 6 planos passaram de 10–28% de oscilação para 1,6–6,4% depois da correção.
+
+**Limites:** sem falas (a estação não tem modelo de voz); o rosto do personagem principal varia um pouco entre planos e perde detalhe em planos longos de muito movimento; o personagem secundário se afina quando se estica; geração única por plano, sem refinamento.
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
 - **Avaliar o áudio** gerado pelo LTX 2.5 (não foi avaliado)
 - **Avaliar o áudio** das extensões e a continuidade do movimento; testar extensões mais longas (mais de 2 etapas) e outros valores de força/quadros-guia
+- Reavaliar as emendas M1 × M2 da extensão com **mais sementes** (a diferença está no ruído)
 - Medir a extensão com condicionamento de **áudio** do trecho anterior (nós `LTXVAudioVAEEncode` / `LTXVReferenceAudio` existem no ComfyUI e não foram usados)
 - **Decidir a licença do Qwen-Image 2.1** (licenciar, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)
 - Avaliação humana dos resultados do Qwen-Image 2.1 e dos itens I1/I4 com ele

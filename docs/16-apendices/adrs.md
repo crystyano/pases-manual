@@ -259,6 +259,9 @@ Também houve uma **correção de premissa**: as fontes secundárias de 07/10 di
 - **Surgir modelo aberto claramente superior** no mesmo orçamento de memória, ou upgrade de GPU/RAM (reabre Wan A14B, FLUX.2 [dev] e variantes sem offload).
 - **Estouro de RAM** durante gerações reais.
 
+### Atualização (2026-10-11) — defeito de configuração do VAE corrigido; decisão mantida
+Os vídeos do LTX 2.5 usados nesta decisão tinham um defeito de configuração meu: o `VAEDecodeTiled` foi configurado com blocos temporais de 16 quadros e sobreposição 8 (o template usa 64 e 16), o que gerava uma **queda de nitidez a cada 8 quadros** ("piscar com borrão"). O benchmark não acusou o defeito. Corrigido, a suíte foi **repetida** (rodada `2026-10-11_0055_ltx`): a oscilação de nitidez caiu de 7–29% para **1,8–3,7%** nos itens de vídeo sem movimento intenso, e de 11–29% para 2,3% nas extensões; tempo e memória **não mudaram**. O efeito do defeito era **desfavorável ao LTX** na comparação com o Wan, portanto a **decisão se mantém e se fortalece**. Passou a existir uma métrica objetiva de piscar (`bench/qualidade.py`) em todo relatório. Detalhes e tabela no [Cap. 8A, seção LTX × Wan](../08a-imagem-video.md).
+
 ---
 
 ## ADR-009 — Qwen-Image 2.1 instalado só para avaliação (licença não comercial) {#adr-009}
