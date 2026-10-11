@@ -354,3 +354,39 @@ O mesmo modelo foi testado em **texto→imagem** (itens I1–I5, 15 gerações, 
 
 ### Atualização (2026-10-09) — A/B do encoder fp8 × bf16
 O encoder `qwen_3_4b` em **bf16** (o do template oficial, 8,04 GB) foi baixado e comparado ao fp8 em texto→imagem (15 gerações) e em edição (12), nas mesmas sementes: tempo **igual** (3 s / 6 s), VRAM **+2,3 GB** (14,8 contra 12,5 GB), diferença média por pixel de **0,5 a 1,8** nas edições (praticamente idênticas) e texto **igualmente quebrado** em texto→imagem. **Decisão: manter o fp8**; o bf16 foi apagado do disco. Reinstalação documentada no [Cap. 8A, seção 8A.5](../08a-imagem-video.md). Limite: 3 sementes; o modelo do klein em bf16 (7,2 GB) não foi testado.
+
+---
+
+## ADR-011 — Voz local em CPU: Kokoro (texto→fala) e faster-whisper (fala→texto) {#adr-011}
+
+**Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-11
+
+### Objetivo
+Ter, na estação, (a) uma forma de **conferir o que os modelos de vídeo falam** — o LTX 2.5 gera voz junto com o vídeo e ninguém aqui consegue ouvir o áudio em automação — e (b) uma voz sintetizada de reserva, caso a voz gerada pelo vídeo não sirva, sem depender de serviços externos.
+
+### Alternativas avaliadas
+Levantamento por conhecimento prévio, **sem testar** as concorrentes:
+- **Piper** (TTS leve, vozes pt-BR): menor, mas com voz mais robótica.
+- **XTTS-v2** e **F5-TTS** (clonagem de voz): melhores em naturalidade e clonagem, mas com licença **não comercial**; descartados por isso.
+- **Whisper maior (`medium`/`large`)**: mais preciso, bem mais pesado; o `small` bastou para a frase testada.
+- **Inferência na GPU:** descartada para não disputar VRAM e RAM com o ComfyUI (o LTX já usa ~50 GB dos 59 GB de RAM).
+
+### Decisão
+Adotar **Kokoro-82M** (Apache 2.0, pt-BR, 327 MB) e **faster-whisper `small`** (MIT, 484 MB), ambos em **CPU**, num ambiente separado (`/srv/pases/tts`, 1,6 GB, não versionado), com os scripts `falar.py` e `transcrever.py` versionados em `/srv/pases/tts-config/`. Autorizado pelo responsável em 11/10/2026.
+
+### Justificativa
+- **Resolveu o problema real:** o Whisper conferiu que o LTX 2.5 falou exatamente "Lanchinho errado" em português (plano e vídeo final), e detectou os sons que o modelo gerou sozinho.
+- O Kokoro gerou a mesma frase em duas vozes masculinas, conferidas pelo Whisper, e permitiu uma versão alternativa mais grave encaixada na janela da boca.
+- Licenças livres e uso comercial permitido; CPU deixa a GPU livre; instalação sem `sudo`.
+
+### Consequências e riscos
+- **O Whisper alucina em silêncio/ruído**; o `transcrever.py` marca trechos suspeitos, mas a conferência não é infalível.
+- **Qualidade da voz do Kokoro não avaliada por ouvido** (só pelo reconhecimento do Whisper e por medidas); depende da avaliação humana.
+- **Dependências frágeis:** `faster-whisper` 1.2.1 é incompatível com o PyAV 19 na leitura de arquivo (contornado); versões fixadas em `tts-config/requirements.txt`.
+- **Token revogado em cache** do Hugging Face pode quebrar downloads públicos (contornado por variável de ambiente nos scripts; falta apagar o token).
+- Sem clonagem de voz nem sincronia labial automática com a voz sintetizada (só encaixe por tempo).
+
+### Quando revisar
+- A **avaliação humana reprovar** a voz do Kokoro ou a do LTX → reavaliar Piper, ou clonagem de voz sob licença comercial adequada.
+- Surgir necessidade de **falas longas, dois personagens ou sincronia labial** → testar Whisper maior e modelos de vídeo/dublagem com sincronia.
+- **Mudança de licença** de qualquer um dos dois modelos, ou a estação ganhar mais RAM/VRAM para rodar o Whisper maior na GPU.

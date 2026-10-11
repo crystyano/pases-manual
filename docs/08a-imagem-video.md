@@ -17,6 +17,7 @@ Este capítulo documenta a camada de **geração de imagem e vídeo** da estaç�
 | Modelos | `/dados/modelos/comfyui/` (SSD SATA `SSD1TB`) |
 | Saída (imagens/vídeos) | `/scratch/comfyui/output/` (NVMe `NVME512`) |
 | Serviço | `comfyui.service` (systemd **de usuário**) |
+| Voz (CPU, separada do ComfyUI) | `/srv/pases/tts` — Kokoro (texto→fala) e Whisper (fala→texto); ferramentas em `/srv/pases/tts-config` (seção 8A.11) |
 
 !!! note "ComfyUI não é um modelo"
     O ComfyUI é a *interface e o motor* de execução. Os modelos (Z-Image, Wan etc.) são arquivos separados que ele carrega. Trocar ou adicionar um modelo não exige reinstalar nada — basta colocar o arquivo na pasta certa.
@@ -287,6 +288,17 @@ curl -L -C - --fail -o $B/vae/flux2-klein-vae-apache.safetensors \
 ```
 
 Conferir os SHA-256 (campo `lfs.oid` da API de árvore de cada repositório) e reiniciar o ComfyUI. O encoder **não** precisa ser baixado: usa-se o `qwen_3_4b_fp8_mixed.safetensors` do Z-Image. O download levou poucos minutos.
+
+**6F. Ambiente de voz (CPU)** — texto→fala (Kokoro) e fala→texto (Whisper), num venv **separado** do ComfyUI. Detalhes, scripts e cuidados na seção 8A.11 e em `/srv/pases/tts-config/README.md`:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH" UV_HTTP_TIMEOUT=300
+mkdir -p /srv/pases/tts && cd /srv/pases/tts && uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python torch --index-url https://download.pytorch.org/whl/cpu
+uv pip install --python .venv/bin/python "kokoro==0.9.4" soundfile faster-whisper
+```
+
+Não exige `sudo` nem `espeak-ng` (o pacote `misaki` traz a biblioteca). Os modelos são baixados na primeira execução.
 
 **7. Reiniciar o serviço** para o ComfyUI indexar os modelos novos:
 
@@ -691,11 +703,18 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | **Qwen-Image 2.1 sob licença não comercial** | Usar só para avaliação; não incluir em materiais da empresa sem licença comercial da Qwen — a alternativa Apache (2512) foi testada e reprovada; sem licença, usar o Z-Image; ver [ADR-009](16-apendices/adrs.md#adr-009) |
 | **VAE do FLUX.2 com licença ambígua** (repositório `Comfy-Org/flux2-dev` marcado como não comercial) | Usado o VAE do repositório Apache do klein; pesos **não comparados** com o do Comfy-Org (8A.3) |
 | **Parâmetros do VAE tiled copiados com a ordem trocada** (blocos temporais de 16 quadros e sobreposição 8, em vez de 64 e 16) | Erro meu: queda de nitidez a cada 8 quadros em todos os vídeos do LTX até 10/10/2026, sem o benchmark acusar. Corrigido em 11/10/2026; o `bench/qualidade.py` agora mede o defeito em todo relatório. **Lição:** ao reproduzir um template, conferir os valores pelo **nome do campo** (`object_info`), não pela posição em `widgets_values` |
+| **Whisper alucinando texto em silêncio/ruído** | `transcrever.py` marca trechos suspeitos (`sem_fala`/`logprob`); conferir só o trecho com fala real, e repetir se algo parecer estranho |
+| **Token revogado em cache quebrando downloads públicos** | `HF_HUB_DISABLE_IMPLICIT_TOKEN=1` nos scripts; apagar o token (`hf auth logout`) |
+| **Sufixo de consistência citando personagem ausente** | Um sufixo por plano, só com os personagens presentes (8A.10, item 8) |
 | Modelos de terceiros com licenças distintas | Conferir a licença de cada modelo antes de uso comercial; Z-Image-Turbo e Wan 2.2 são Apache 2.0 (Hugging Face, 07/10/2026); o **LTX 2.5** e o **Qwen-Image 2.1** têm licenças próprias (seção 8A.3) |
 
 ## 8A.10 Receita: vídeos curtos de um personagem 3D <span class="badge badge-existe">Existe — 11/10/2026</span>
 
-Caso real em que o pipeline desta estação foi usado para produzir dois vídeos verticais (9:16, ~14–16 s, 3 a 4 planos cada) de um mascote 3D, a partir de **uma única imagem de referência** do personagem. O que funcionou e o que não funcionou:
+!!! danger "Avaliação do responsável (11/10/2026): resultados MUITO RUINS — leia a receita abaixo com isso em mente"
+    Depois de **assistir** ao episódio "Lanchinho errado", o responsável avaliou: **"personagem inconsistente, física ruim"**. Os dois primeiros vídeos tinham sido avaliados como "interessantes, mas ainda não satisfatórios". As observações de "bom" e "funcionou" desta seção vêm da **leitura de miniaturas pelo assistente** e **estavam otimistas demais**: miniaturas não mostram escala, anatomia nem física. Nas capturas do vídeo final: (a) no plano de captura o personagem aparece **fundido ao corpo da leoa**; (b) pendurado na boca dela, o personagem fica **minúsculo e com uma barriga rosada segmentada que não existe no desenho**; (c) no plano da mordida o **rosto muda** (a faixa vira uma crina) e a **pata** entra na boca da leoa em vez de a boca dele morder o focinho; (d) caminhando, o corpo vira o de um urso e a faixa e a cicatriz mudam de lugar. **Conclusão provisória:** com os modelos locais atuais, **ações com contato físico entre dois personagens** (carregar pela nuca, morder, torcer o corpo) **não são confiáveis**; o que funciona razoavelmente são **planos de um personagem só, com movimento simples**. A conferência da **fala** (8A.11) segue válida, mas **fala correta não significa vídeo bom**.
+
+
+Caso real (com resultado **insatisfatório**, ver o aviso acima) em que o pipeline desta estação foi usado para produzir dois vídeos verticais (9:16, ~14–16 s, 3 a 4 planos cada) de um mascote 3D, a partir de **uma única imagem de referência** do personagem. O que funcionou e o que não funcionou:
 
 1. **Quadros iniciais com o FLUX.2 klein (edição):** colocar o personagem em cada cenário preservando a identidade (pelagem, cicatriz, olhos, estilo) funciona bem. Gerar **4 variações por plano** (~6 s cada) e escolher.
 2. **Personagem secundário consistente: criar uma referência e usar as duas imagens juntas.** Sem isso, o secundário mudou de desenho entre planos e um quadro saiu com **duas** cobras. Gerou-se uma referência por texto→imagem e os quadros foram editados com **duas referências** (principal + secundário), pedindo "exatamente UM" de cada. Resultado: o mesmo desenho nos três planos. (O mesmo recurso falhou ao compor um *objeto* de outra foto — ver E4 —, mas funciona com personagens do mesmo estilo.)
@@ -704,13 +723,49 @@ Caso real em que o pipeline desta estação foi usado para produzir dois vídeos
 5. **Montagem com `ffmpeg`:** cortes secos, volume normalizado (`loudnorm`, -16 LUFS; os planos saíram de -22 a -38 dB), fade curto no início e no fim, H.264 + AAC.
 6. **Medir o piscar de cada plano com `qualidade.py` antes de montar.** Foi o que localizou o defeito do VAE: os 6 planos passaram de 10–28% de oscilação para 1,6–6,4% depois da correção.
 
-**Limites:** sem falas (a estação não tem modelo de voz); o rosto do personagem principal varia um pouco entre planos e perde detalhe em planos longos de muito movimento; o personagem secundário se afina quando se estica; geração única por plano, sem refinamento.
+7. **Reaproveitar quadros de um episódio anterior como referência** manteve cenário e estilo (a identidade do personagem **não** se manteve nos vídeos, ver o aviso): bastou passar um quadro do episódio anterior ao FLUX.2 klein e pedir "mantenha ambos os personagens exatamente como na imagem" para ter 4–6 candidatos por plano na mesma savana.
+8. **O texto de consistência que você cola em todo prompt NÃO pode citar um personagem que não está no plano.** O sufixo "a leoa mantém o pelo castanho sem juba" fez a leoa **reaparecer** num plano em que ela já tinha ido embora. Cada plano precisa do seu próprio sufixo, só com os personagens presentes.
+9. **Postura de quatro patas:** pedir "anda em quatro patas" a partir de um quadro em pé não bastou (o modelo manteve o personagem em duas patas). Funcionou descrever como **animal quadrúpede de verdade** ("todas as patas no chão, tronco horizontal e baixo, cabeça baixa") com 6 variações, e animar a partir de um quadro **já em quatro patas**.
+10. **Ação difícil (ser carregado pela nuca e se virar para morder): ancorar primeiro e último quadro (flf2v)** — primeiro = carregado, visão lateral; último = close da mordida — produziu uma transição com a câmera se aproximando, que o imagem→vídeo simples não produziu, **mas o resultado visto em tela cheia tem escala e anatomia erradas (item avaliado como ruim pelo responsável)**. O último quadro do plano ancorado é o primeiro do plano seguinte, o que dá um corte contínuo.
+11. **Fala no vídeo:** o LTX 2.5 gera a voz junto; funciona escrevendo a frase **entre aspas, com o idioma e o tipo de voz no prompt** (seção 8A.11). Se a voz não agradar, dá para trocá-la por uma voz sintetizada encaixada na janela da boca.
+
+**Limites:** a fala depende do prompt e deve ser conferida com o Whisper (seção 8A.11); o rosto do personagem principal varia um pouco entre planos e perde detalhe em planos longos de muito movimento; o personagem secundário se afina quando se estica; geração única por plano, sem refinamento.
+
+## 8A.11 Voz e fala <span class="badge badge-existe">Existe — 11/10/2026</span>
+
+### Ferramentas instaladas (CPU, ambiente separado)
+
+| Peça | Para quê | Licença | Tamanho |
+|---|---|---|---|
+| **Kokoro-82M** (`hexgrad/Kokoro-82M`, pacote `kokoro` 0.9.4) | texto→fala em português do Brasil; vozes `pm_santa`, `pm_alex` (masculinas), `pf_dora` (feminina) | Apache 2.0 | modelo 327 MB |
+| **faster-whisper `small`** (`Systran/faster-whisper-small`, pacote 1.2.1) | fala→texto: **conferir o que um modelo de vídeo falou** | MIT | modelo 484 MB |
+
+Ambiente `/srv/pases/tts/.venv` (1,6 GB, **não versionado**; PyTorch **CPU**, para não disputar a GPU com o ComfyUI), modelos em `~/.cache/huggingface/hub` (777 MB, disco do sistema). Scripts versionados em `/srv/pases/tts-config/`: **`falar.py`** (`falar.py "texto" saida.wav [--voz pm_santa] [--grave 0.85]`) e **`transcrever.py`** (`transcrever.py arquivo.mp4`). Decisão: [ADR-011](16-apendices/adrs.md#adr-011).
+
+### O LTX 2.5 fala português quando a frase vai no prompt
+Num plano de 5 s de um personagem de desenho animado, o prompt trouxe a frase entre aspas, com o idioma e a voz: *"...says in a deep sarcastic raspy voice, in Brazilian Portuguese, with his lips moving clearly: "Lanchinho errado.""*. Resultado conferido com o Whisper no **plano isolado** e no **vídeo final de 21 s**: transcrito exatamente "Lanchinho errado", idioma português detectado com 99–100% de confiança, falado em ~1,3 s (de 0,34 s a 1,68 s do plano). O modelo também gerou **sozinho** dois sons coerentes com a cena (um grito de susto e um grito da leoa mordida); nos outros planos não houve fala inventada. **Nenhuma dublagem externa foi necessária.**
+
+**Tom da voz (medida grosseira):** F0 mediano de ~157 Hz (o rastreador é simples e erra oitavas), isto é, **média, não grave**, apesar de o prompt pedir "deep" e "raspy". Quem julga o timbre é quem ouve; nenhuma avaliação humana do áudio foi feita ainda.
+
+### Trocar a voz por uma sintetizada (opcional)
+1. Gerar a frase: `falar.py "Lanchinho errado." voz.wav --voz pm_santa --grave 0.85` (a voz do Kokoro tem F0 de ~150 Hz; `--grave 0.85` a aprofunda ~15% sem mudar a duração além de ~1,4 s).
+2. Medir onde a fala do modelo ocorre no plano (envelope de volume) e **silenciar essa janela, incluindo a cauda da última palavra** (a sílaba final "-do" se estendia ~0,4 s além do que o volume sugeria e deixou um "do" residual na primeira tentativa).
+3. Mixar a nova voz começando no início da fala original (`adelay`) e normalizar (`loudnorm`).
+4. Conferir com `transcrever.py` que só a nova voz aparece.
+
+### Cuidados
+- **O Whisper alucina texto em silêncio ou ruído.** Numa execução ele "inventou" frases depois do fim de uma fala real ("O que você tem...") que não se repetiram na execução seguinte. O `transcrever.py` imprime `sem_fala` e `logprob` por trecho e marca os suspeitos (`sem_fala` > 0,5 ou `logprob` < -1,0); a transcrição do trecho real saiu estável (`sem_fala` 0,09) nas duas execuções.
+- **Token do Hugging Face revogado, ainda em `~/.cache/huggingface/token`:** faz o Hub recusar até repositórios públicos. Os scripts definem `HF_HUB_DISABLE_IMPLICIT_TOKEN=1`; o certo é apagar o token (`hf auth logout`) <span class="badge badge-confirmar">A confirmar</span>.
+- **`faster-whisper` 1.2.1 × PyAV 19:** a leitura direta de arquivo falha (`open() got an unexpected keyword argument 'metadata_errors'`). O `transcrever.py` contorna extraindo o áudio com `ffmpeg` e passando um **vetor** ao Whisper.
+- Planos de vídeo com ambiente quase mudo (volume ~-46 dBFS) existem (planos de caminhada); a normalização de volume do vídeo final não os corrige — ver 8A.10.
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
 - **Avaliar o áudio** gerado pelo LTX 2.5 (não foi avaliado)
 - **Avaliar o áudio** das extensões e a continuidade do movimento; testar extensões mais longas (mais de 2 etapas) e outros valores de força/quadros-guia
+- **Avaliação humana da voz** do LTX (e da alternativa do Kokoro) e do áudio dos vídeos
+- Testar outras falas e idiomas no LTX, falas mais longas e **dois personagens falando**; medir a sincronia labial
 - Reavaliar as emendas M1 × M2 da extensão com **mais sementes** (a diferença está no ruído)
 - Medir a extensão com condicionamento de **áudio** do trecho anterior (nós `LTXVAudioVAEEncode` / `LTXVReferenceAudio` existem no ComfyUI e não foram usados)
 - **Decidir a licença do Qwen-Image 2.1** (licenciar, ou ficar só com o Z-Image) — [ADR-009](16-apendices/adrs.md#adr-009)

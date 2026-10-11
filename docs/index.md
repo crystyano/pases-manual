@@ -17,6 +17,7 @@ Este é o **manual vivo** da plataforma de engenharia de software assistida por 
 | Ubuntu instalado | <span class="badge badge-existe">Existe</span> — 26.04 LTS, kernel 7.0, driver NVIDIA OK |
 | Infraestrutura (Docker · PostgreSQL 17 · Redis 7) | <span class="badge badge-existe">Existe</span> — stack core desde 21/07/2026 |
 | Modelos locais (Ollama · Devstral Small 2 · Qwen3-VL) | <span class="badge badge-existe">Existe</span> — desde 21/07/2026 |
+| Voz local (Kokoro · Whisper, em CPU) | <span class="badge badge-existe">Existe</span> — desde 11/10/2026 |
 | Geração de imagem e vídeo (ComfyUI · Z-Image-Turbo · FLUX.2 klein · Qwen-Image 2.1 · LTX 2.5 · Wan 2.2 5B) | <span class="badge badge-existe">Existe</span> — desde 08/10/2026 |
 | Camada de IA (Gateway, RAG, agentes) | <span class="badge badge-proposto">Proposto</span> |
 

@@ -11,6 +11,7 @@
 | **FLUX.2 klein** | Família de modelos de imagem da Black Forest Labs; a versão de 4 bilhões de parâmetros (Apache 2.0) edita imagens a partir de referências e está instalada na estação (Capítulo 8A, ADR-010). A versão 9B tem licença não comercial. |
 | **HWE** | *Hardware Enablement* — kernels e drivers mais novos disponibilizados no Ubuntu LTS para suportar hardware recente. |
 | **Inferência** | Execução de um modelo de IA já treinado (gerar texto, código etc.), em oposição a treinamento. |
+| **Kokoro** | Modelo de síntese de voz (texto→fala) de 82 milhões de parâmetros, Apache 2.0, com vozes em português do Brasil. Roda em CPU na estação (Capítulo 8A.11, ADR-011). |
 | **LLM** | *Large Language Model* — modelo de linguagem de grande porte (Claude, Llama, Qwen etc.). |
 | **LTX 2.5** | Modelo de vídeo aberto da Lightricks (22 bilhões de parâmetros) que gera vídeo e áudio juntos. Licença própria: gratuito abaixo de US$ 10 milhões de receita anual (Capítulo 8A, ADR-008). |
 | **Modulare** | Produto da Protustech (sistema em desenvolvimento). |
@@ -27,4 +28,5 @@
 | **Supabase** | Serviço de PostgreSQL gerenciado na nuvem. Hospeda o banco de produção do Moventus (organização Protustech). |
 | **VRAM** | Memória da GPU — o recurso que determina quais modelos locais a estação consegue rodar. |
 | **Wan 2.2 TI2V-5B** | Modelo de vídeo aberto (Apache 2.0) de 5 bilhões de parâmetros, texto e imagem para vídeo. Instalado na estação (Capítulo 8A). |
+| **Whisper** | Modelo de reconhecimento de fala (fala→texto). Na estação roda como *faster-whisper* `small`, em CPU, para conferir o que os modelos de vídeo falaram. Pode alucinar texto em silêncio ou ruído (Capítulo 8A.11). |
 | **Z-Image-Turbo** | Modelo de imagem aberto (Apache 2.0) de 6 bilhões de parâmetros, destilado para 8 passos. Instalado na estação (Capítulo 8A). |
