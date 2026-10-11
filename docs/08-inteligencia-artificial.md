@@ -39,7 +39,7 @@ Notas de operação:
 !!! note "Devstral Small 2 é a escolha inicial — não um casamento"
     Programação é o uso principal da estação, e o Devstral entra como cérebro por reunir agentic + generalista + visão + 256k num único modelo de 16 GB. Mas a escolha é **explicitamente provisória**: se a qualidade de código não atingir os critérios da seção 8.2, o primeiro teste comparativo é contra o **Qwen3-Coder** (ou o equivalente de código da época), rodando o PASES-Bench completo nos dois. Vence o que os números disserem.
 
-    **Atualização (11/10/2026):** o Devstral foi removido por resultados insatisfatórios e o Qwen3-Coder entrou em uso. O PASES-Bench v1 foi executado **só no Qwen3-Coder**, com **fixtures sintéticas** (seção 8.9): ficou **abaixo da meta de precisão em código** (62,4% contra 90%), puxado pela refatoração. **Nunca foi executado no Devstral**, então não há comparação.
+    **Atualização (11/10/2026):** o Devstral foi removido por resultados insatisfatórios e o Qwen3-Coder entrou em uso. O PASES-Bench v1 foi executado **só no Qwen3-Coder**, com **fixtures sintéticas** (seção 8.9): ficou **abaixo da meta de precisão em código** (62,4% pela definição original; 83,8% depois de repetir a refatoração com três fixtures), puxado pela refatoração. **Nunca foi executado no Devstral**, então não há comparação.
 
 ## 8.2 Critérios de permanência e PASES-Bench <span class="badge badge-planejado">Planejado</span>
 
@@ -240,7 +240,7 @@ Open WebUI (porta 3000), LobeChat com SearXNG, PostgreSQL e Redis (`pases-core`,
 Primeira execução do PASES-Bench v1 em um LLM. Código, fixtures e resultados em `/srv/pases/llm-bench` (README próprio). **Modelo testado:** `qwen-cline` (= `qwen3-coder:30b`, Q4_K_M, com `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, `repeat_penalty 1.05`, os parâmetros que o Cline usa), `num_predict 4096`, sementes 1 a 3, **3 repetições por item**, ComfyUI parado e VRAM livre.
 
 ### Por que fixtures sintéticas
-As fixtures oficiais (módulo real do Moventus, imagem do Promob, PDF escaneado) nunca existiram, e o código do Moventus **não está nesta máquina**. Foram criadas fixtures de marcenaria com **testes automáticos**, e cada uma foi **validada antes de testar o modelo**: os testes passam nas soluções de referência (23, 193 e 12 testes), falham no código inicial e **detectam erros plantados** (arredondamento errado, limite de desconto errado, desconto sobre o frete, regras especiais alteradas). O código gerado pelo modelo é **executado localmente** (pasta temporária, ambiente mínimo, timeout de 120 s); os testes ocultos nunca são mostrados ao modelo.
+As fixtures oficiais (módulo real do Moventus, imagem do Promob, PDF escaneado) nunca existiram, e o código do Moventus **não está nesta máquina**. Foram criadas fixtures de marcenaria com **testes automáticos**, e cada uma foi **validada antes de testar o modelo**: os testes passam nas soluções de referência (23, 193 e 12 testes; depois 241 e 141 nas duas fixtures de refatoração acrescentadas), falham no código inicial e **detectam erros plantados** (arredondamento errado, limite de desconto errado, desconto sobre o frete, regras especiais alteradas). O código gerado pelo modelo é **executado localmente** (pasta temporária, ambiente mínimo, timeout de 120 s); os testes ocultos nunca são mostrados ao modelo.
 
 ### Resultado contra as metas do Cap. 8.2
 
@@ -250,7 +250,7 @@ As fixtures oficiais (módulo real do Moventus, imagem do Promob, PDF escaneado)
 | Tempo até o 1º token, a quente | ≤ 3 s | **0,1 s** (prompt curto, mediana de 5); 0,14–0,39 s nos itens | ✅ |
 | Sem transbordo para a RAM | 100% GPU | **100% GPU**, 22 GB; pico de VRAM 10,5 GB (4070) e 12,5 GB (5060 Ti) | ✅ |
 | RAM do sistema | ≤ 75% (~48 GB) | pico de **11,8 GB** | ✅ |
-| **Precisão em código** (itens 1, 2 e 6) | **≥ 90%** | **62,4%** | ❌ |
+| **Precisão em código** (itens 1, 2 e 6) | **≥ 90%** | **62,4%** (definição original); **83,8%** com 3 fixtures de refatoração | ❌ |
 | Português sem erros graves (item 5) | sem erros graves | verificação automática ok; **revisão humana pendente** | ⏳ |
 | Precisão em visão (itens 3 e 4) | ≥ 90% | **não se aplica** (modelo só de texto) | — |
 
@@ -261,18 +261,44 @@ Temperatura máxima 64 °C e potência somada das GPUs de 202 W. **Carga a frio 
 | Item | Rep. 1 | Rep. 2 | Rep. 3 | Média | O que aconteceu |
 |---|---|---|---|---|---|
 | **1. Gerar código** (módulo de orçamento) | 20/23 | 19/23 | 23/23 | **89,9%** | Falhas reais: `'int' object has no attribute 'quantize'` num orçamento vazio (soma de lista vazia dá `int`) nas repetições 1 e 2, e, na 2, não somou as quantidades dos itens agrupados |
-| **2. Refatorar** (193 testes de comportamento) | 0 | 0 | 0 | **0%** | **O código refatorado quebra em toda chamada nas 3 repetições**: `NameError: name 'cupom' is not defined`, porque uma função auxiliar usa `cupom` sem recebê-lo. Confirmado rodando o código dele; **não é falha do teste**. A estrutura melhorou (5 a 6 funções, a maior com 22–30 linhas contra 58 do original), mas o comportamento não se preserva |
+| **2. Refatorar**, fixture de pedido (193 testes de comportamento) | 0 | 0 | 0 | **0%** | **O código refatorado quebra em toda chamada nas 3 repetições**: `NameError: name 'cupom' is not defined`, porque uma função auxiliar usa `cupom` sem recebê-lo. Confirmado rodando o código dele; **não é falha do teste**. A estrutura melhorou (5 a 6 funções, a maior com 22–30 linhas contra 58 do original), mas o comportamento não se preserva. **Ver a repetição com outras fixtures logo abaixo** |
 | **5. Pergunta de negócio** | ok | ok | ok | 3/3 | Lucro **R$ 1.116,50** e margem ~23%, em português e em 5 a 6 linhas (limite de 6) |
 | **6. Tarefa de agente** (reserva de chapas, vários arquivos) | 11/12 | 12/12 | 12/12 | **97,2%** | 10 passos por repetição (1 `list_files`, 4 `read_file`, 3 `write_file`, 1 `run_tests`); rodou os testes antes de terminar; atualizou os testes visíveis (todos passam: 14, 13 e 12 testes). Na repetição 1, `reservar` não levantou o `ValueError` ao exceder o disponível |
 
-**Precisão em código = média dos itens 1, 2 e 6 = (89,9 + 0 + 97,2) / 3 = 62,4%.** Sem o item 2 seria 93,5%, mas **isso não é a nota oficial**: retirar o pior item não é medir.
+**Precisão em código = média dos itens 1, 2 e 6 = (89,9 + 0 + 97,2) / 3 = 62,4%.** Sem o item 2 seria 93,5%, mas **isso não é a nota oficial**: retirar o pior item não é medir. Esta é a definição **original** (item 2 = só a fixture de pedido); a seção seguinte traz o item 2 com três fixtures.
+
+### Repetição do item 2 com outras fixtures <span class="badge badge-existe">Existe — 11/10/2026</span>
+
+Uma única fixture era amostra fraca para um item decisivo. Foram criadas e validadas **duas fixtures de refatoração novas**, com perfis diferentes da primeira (pedido: vários parâmetros espalhados, cupom, UF, tipo de cliente):
+
+- **Parcelas** (`i2b_parcelas`): muitas regras encadeadas, validações com exceção e ajuste de arredondamento na última parcela. 240 casos de comportamento congelados (200 válidos e 40 que devem levantar `ValueError`): **241 testes**.
+- **Produção** (`i2c_producao`): laços com acumuladores, ordenação e formatação de texto. 140 casos: **141 testes**.
+
+**Validação:** passam no código original e na refatoração de referência, e **detectam erros plantados** (taxa do cartão de 1,99% para 2,00%: 35 falhas; sem o ajuste da última parcela: 71; limite de "BOM" de 70 para 75: 15; média sem somar: 97). Mesmo executor e parâmetros do restante da seção; **5 repetições por fixture**, comando `./bench_llm.py --modelo qwen-cline --reps 5 --refatoracao`.
+
+| Fixture | Testes em cada repetição | Média | Como falhou |
+|---|---|---|---|
+| **Pedido** (a original) | 0, 0, 0, 0, 0 de 193 | **0%** | `NameError: cupom` em **todas**; com as 3 da rodada anterior são **8 de 8**, com textos diferentes |
+| **Parcelas** | 241, 216, 216, 233, 216 de 241 | **93,1%** | O código **roda**, mas erra o **comportamento nos limites**: troca `>=` por `>` ao reorganizar |
+| **Produção** | 141 nas 5 de 141 | **100%** | sem falhas |
+
+Exemplos reais dos erros de limite em parcelas: PIX com valor **exatamente** R$ 1.000 recebeu desconto de 3% em vez de 5% (financiado 873,00 em vez de 855,00), e em outra repetição o limite de score 700 do cartão foi trocado. A causa muda a cada repetição, mas é sempre uma fronteira.
+
+**Estrutura:** a divisão em funções melhorou em 5 de 5 (pedido, maior função de 58 para 24–28 linhas; parcelas, de 56 para 30–35) e em apenas 2 de 5 na produção, onde em 3 repetições o modelo manteve uma função maior que a original (64 a 70 linhas contra 40). A métrica é grosseira e **não mede legibilidade**.
+
+| Definição do item 2 | Item 2 | Precisão em código (itens 1, 2 e 6) |
+|---|---|---|
+| **Original** (só a fixture de pedido) | 0% | **62,4%** |
+| **Com as 3 fixtures** de refatoração | **64,4%** = (0 + 93,1 + 100) / 3 | **83,8%** = (89,9 + 64,4 + 97,2) / 3 |
+
+**As duas ficam abaixo da meta de 90%.** A segunda definição foi adotada **depois de ver os resultados**, o que é um viés; só se justifica porque uma fixture era amostra fraca. Por isso as duas estão registradas. **Lição prática (para o uso com o Cline):** o modelo refatora bem a estrutura, mas pode **quebrar o código** (esquecer um parâmetro) ou **alterar um limite sem avisar**; **rode sempre os testes depois de uma refatoração.**
 
 ### O que isso significa
-- Como **agente** (o uso com o Cline) o modelo foi muito bem; como **refatorador**, introduziu um erro que derruba tudo e **o repetiu nas três tentativas**. Uma falha repetível pesa mais que uma ocasional.
+- Como **agente** (o uso com o Cline) o modelo foi muito bem; como **refatorador**, teve resultado **desigual**: na fixture de pedido introduziu um erro que derruba tudo e o repetiu **8 de 8** vezes; em outras duas fixtures se saiu bem, mas com erros **silenciosos nos limites** (ver a seção anterior). Uma falha repetível pesa mais que uma ocasional.
 - A troca do Devstral pelo Qwen3-Coder ([ADR-012](16-apendices/adrs.md#adr-012)) **permanece** (decisão do responsável), mas agora com um dado: o modelo atual **reprova no critério de precisão em código** deste benchmark. **O Devstral nunca foi executado nesta suíte**; não dá para dizer qual é melhor.
 
 ### Limites
-- **Uma fixture por item**, escrita pelo assistente, de tema único; uma refatoração diferente poderia se sair melhor ou pior.
+- **Poucas fixtures:** uma por item (três no item 2), todas escritas pelo assistente, em português e do mesmo tema (marcenaria).
 - 3 repetições com temperatura 0,7: há variação, e a diferença entre 89,9% e a meta de 90% do item 1 **está dentro dessa variação**.
 - A checagem do item 5 é automática (números, português por palavras frequentes e contagem de linhas); a **qualidade do português é avaliação humana** e não foi feita. Respostas em `results/<rodada>/i5_rep*.txt`.
 - Os testes ocultos medem o que a especificação **disse**; um comportamento razoável que a especificação não cobre não é medido.
@@ -281,13 +307,14 @@ Temperatura máxima 64 °C e potência somada das GPUs de 202 W. **Carga a frio 
 ### Como repetir
 ```bash
 cd /srv/pases/llm-bench && ./bench_llm.py --validar && ./bench_llm.py --modelo qwen-cline --reps 3
+./bench_llm.py --modelo qwen-cline --reps 5 --refatoracao   # só o item 2, nas 3 fixtures de refatoração
 ```
 O ComfyUI precisa estar parado (VRAM livre) e `ollama ps` vazio.
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - Instalação do Ollama e benchmark real de cada modelo na estação (tok/s medidos)
-- Repetir o item 2 (refatoração) com **outra fixture**, rodar o PASES-Bench com as **fixtures oficiais** (Moventus, Promob, nota fiscal) e os itens de **visão** no `qwen3-vl:8b`
+- Rodar o PASES-Bench com as **fixtures oficiais** (Moventus, Promob, nota fiscal) e os itens de **visão** no `qwen3-vl:8b`
 - Papel do Claude no fluxo de trabalho ([ADR-003](16-apendices/adrs.md#adr-003))
 - AI Gateway ([ADR-004](16-apendices/adrs.md#adr-004)) — ferramenta e configuração
 - Cache de respostas e controle de custo
