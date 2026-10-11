@@ -17,6 +17,7 @@ Este capítulo documenta a camada de **geração de imagem e vídeo** da estaç�
 | Modelos | `/dados/modelos/comfyui/` (SSD SATA `SSD1TB`) |
 | Saída (imagens/vídeos) | `/scratch/comfyui/output/` (NVMe `NVME512`) |
 | Serviço | `comfyui.service` (systemd **de usuário**) |
+| 3D (Blender 5.0.1) | `/srv/pases/blender`; scripts em `/srv/pases/blender-config` (seção 8A.12) |
 | Voz (CPU, separada do ComfyUI) | `/srv/pases/tts` — Kokoro (texto→fala) e Whisper (fala→texto); ferramentas em `/srv/pases/tts-config` (seção 8A.11) |
 
 !!! note "ComfyUI não é um modelo"
@@ -593,11 +594,11 @@ Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · 
 
 ### Regras de convivência com o Ollama
 
-1. **Descarregar o LLM antes de gerar vídeo.** O Devstral ocupa ~11 GB da 5060 Ti; sem descarregá-lo, falta VRAM:
+1. **Descarregar o LLM antes de gerar vídeo.** O `qwen-cline` ocupa **22 GB** (divididos entre as duas GPUs; ~12 GB na 5060 Ti); sem descarregá-lo, falta VRAM:
 
     ```bash
     ollama ps                          # ver o que está carregado
-    ollama stop devstral-small-2:24b   # liberar a VRAM
+    ollama stop qwen-cline             # liberar a VRAM
     ```
 
 2. **Uma geração por vez.** O nobreak tem 600 W e já apitou com cargas paralelas ([Cap. 8.6](08-inteligencia-artificial.md)).
@@ -605,7 +606,7 @@ Itens: **I1** ambiente de marcenaria · **I2** texto em português na imagem · 
 
 ### Regras de uso do LTX 2.5
 
-- **RAM é o limite, não a VRAM:** pico de ~50,7 GB de 59 GB. Antes de gerar, fechar cargas pesadas; o Devstral deve estar descarregado (`ollama ps` vazio).
+- **RAM é o limite, não a VRAM:** pico de ~50,7 GB de 59 GB. Antes de gerar, fechar cargas pesadas; nenhum LLM pode estar carregado (`ollama ps` vazio).
 - **Dimensões:** largura e altura finais **múltiplas de 64** (o estágio 1 roda na metade e precisa de múltiplos de 32). **Frames = segundos × fps + 1 e precisa ser 8n+1** (2 s a 24 fps = 49; 5 s = 121).
 - **Cada prompt novo custa ~80 s a mais.** O text encoder (14,6 GB) e o transformer (20,5 GB) não cabem juntos na GPU: a cada prompt novo o ComfyUI carrega o encoder, descarrega e recarrega o transformer (visto nos logs). Com o **mesmo prompt e outra semente** o encoder é reaproveitado e a geração leva só ~19 a 21 s (vídeo curto). Na prática: **gere várias sementes por prompt** (ex.: 3 variações seguidas) em vez de trocar de prompt a cada geração. Os ~100 s da 1ª semente de cada item nas tabelas vêm daí, não de uma carga única dos modelos.
 - Templates prontos na interface: `video_ltx2_5_t2v` (texto), `video_ltx2_5_i2v` (imagem) e `video_ltx2_5_flf2v` (primeiro e último quadro — testado, ver seção 8A.5).
@@ -759,11 +760,42 @@ Num plano de 5 s de um personagem de desenho animado, o prompt trouxe a frase en
 - **`faster-whisper` 1.2.1 × PyAV 19:** a leitura direta de arquivo falha (`open() got an unexpected keyword argument 'metadata_errors'`). O `transcrever.py` contorna extraindo o áudio com `ffmpeg` e passando um **vetor** ao Whisper.
 - Planos de vídeo com ambiente quase mudo (volume ~-46 dBFS) existem (planos de caminhada); a normalização de volume do vídeo final não os corrige — ver 8A.10.
 
+## 8A.12 3D com o Blender <span class="badge badge-existe">Existe — 11/10/2026</span>
+
+Motivo: os vídeos de IA com **dois personagens em contato** (carregar, torcer, morder) perderam escala, anatomia e identidade ([8A.10](#8a10-receita-videos-curtos-de-um-personagem-3d-existe-11102026)). O Blender permite animar um modelo 3D com identidade idêntica em todos os planos.
+
+### Instalação
+**Blender 5.0.1** (a mesma versão em que o projeto original foi feito, no Windows), baixado do site oficial: **374.154.072 bytes, SHA-256 conferido** contra o publicado (`8019580e…e60b09`). Extraído em `/srv/pases/blender/` (1,6 GB, **não versionado**, sem `sudo`). Procedimento e scripts em `/srv/pases/blender-config/` (README). Roda **sem interface** (`blender -b --factory-startup --python script.py`), com Python 3.11.13, e o **Cycles renderiza na RTX 5060 Ti** via OptiX.
+
+### O que o modelo 3D do texugo tem (inspecionado em 11/10/2026)
+Exportação do Tripo (`modelo3d/Tripo-export/Bolado.zip`, um FBX com texturas):
+
+| Item | Valor |
+|---|---|
+| Malha | 1 objeto, 9.146 vértices, 18.289 faces; ~0,56 × 0,57 × 0,78 m |
+| Material | 1, com 4 texturas PBR (cor, normal, rugosidade, metálico) |
+| Esqueleto | **65 ossos, padrão Mixamo (`mixamorig:`)**, **rig humanoide** (corpo e dedos; **sem ossos de rosto ou mandíbula**), 52 grupos de vértices (pesos de pele) |
+| Animações prontas (12) | `angry_01`, `angry_03`, `box_01`, `dance_02`, `fall`, `flee_02`, `fold_arms`, `frightened`, `idle`, `play_mobile_game`, `run`, `sit` |
+
+### Velocidade de render
+Cycles, 720×1280, denoise ligado: **~1,3 s por quadro** a 48 amostras; o clipe `angry_01` inteiro (85 quadros, 32 amostras) levou **1 min 45 s**. Quadros renderizados mostram a **identidade exata** do personagem (faixa, cicatriz, olhos, dentes, pelo texturizado).
+
+### Limites (o que o 3D **não** resolve sozinho)
+- **O rig é humanoide:** o texugo anda em **duas patas**; não há caminhada de quatro patas pronta.
+- **Não há ossos de rosto:** a boca não fala nem a fala sincroniza; falas exigiriam trabalho extra (ou outro modelo).
+- **Não existe modelo 3D da leoa**, então o episódio da leoa não cabe em 3D sem criá-la.
+- A **licença** da exportação do Tripo **não foi verificada**.
+- O clipe de teste (`video/local-pc/teste-3d/Texugo_3D_teste_angry_01.mp4`) **ainda não foi avaliado pelo responsável**; a qualidade do **movimento** das animações prontas é desconhecida.
+
+### Usos possíveis
+Clipes só com o texugo usando as animações existentes (bravo, correndo, assustado, dançando, jogando no celular); usar renders do 3D como **âncora de identidade** (quadro inicial) dos planos de IA; criar a leoa em 3D (custo e qualidade **não avaliados**).
+
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
 - **Avaliar o áudio** gerado pelo LTX 2.5 (não foi avaliado)
 - **Avaliar o áudio** das extensões e a continuidade do movimento; testar extensões mais longas (mais de 2 etapas) e outros valores de força/quadros-guia
+- **Avaliar o clipe 3D** (`teste-3d/`) e decidir entre clipes só do texugo em 3D, 3D como âncora de identidade ou criar a leoa (8A.12)
 - **Avaliação humana da voz** do LTX (e da alternativa do Kokoro) e do áudio dos vídeos
 - Testar outras falas e idiomas no LTX, falas mais longas e **dois personagens falando**; medir a sincronia labial
 - Reavaliar as emendas M1 × M2 da extensão com **mais sementes** (a diferença está no ruído)

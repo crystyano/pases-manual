@@ -5,6 +5,8 @@
 | **ADR** | *Architecture Decision Record* — registro formal de uma decisão de arquitetura, com contexto, alternativas e gatilho de revisão. |
 | **AI Gateway** | Serviço interno que expõe uma interface única de IA aos projetos e roteia cada pedido para o modelo adequado. |
 | **AI Supervisor** | Orquestrador que decide quais IAs e ferramentas participam de cada tarefa (nome definitivo a batizar). |
+| **Blender** | Programa de 3D de código aberto. Na estação (5.0.1) anima e renderiza o texugo em 3D, sem interface, com Cycles na GPU (Capítulo 8A.12). |
+| **Cline** | Extensão do VS Code que usa um LLM como agente de programação; aqui usa o `qwen-cline` do Ollama (Capítulo 8.8). |
 | **ComfyUI** | Interface e motor de execução, em grafo de nós, para modelos de imagem e vídeo. Não é um modelo — carrega os arquivos de modelo (Capítulo 8A). |
 | **Embedding** | Representação numérica (vetor) de um texto, usada para busca por similaridade no RAG. |
 | **EXPO** | Perfil de overclock de memória da AMD (equivalente ao XMP da Intel). |

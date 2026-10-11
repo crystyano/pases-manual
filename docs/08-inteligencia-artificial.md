@@ -2,6 +2,9 @@
 
 Este capítulo documenta a camada de IA da estação: modelos locais, o papel do Claude e, futuramente, o AI Gateway. A geração de **imagem e vídeo** (ComfyUI) está no [Capítulo 8A](08a-imagem-video.md).
 
+!!! warning "Estado atual dos LLMs (verificado em 11/10/2026)"
+    Este capítulo foi escrito em julho com o **Devstral Small 2** como "cérebro local". **Ele foi removido** por não ter apresentado resultados satisfatórios (informado pelo responsável). O que está no Ollama hoje é o **Qwen3-Coder 30B-A3B** (Q4_K_M), em uso com o Cline, além do Qwen3-VL 8B — ver o **inventário verificado na seção 8.8** e o [ADR-012](16-apendices/adrs.md#adr-012). As tabelas e benchmarks do Devstral abaixo são **histórico**.
+
 ## 8.1 Seleção inicial de modelos locais <span class="badge badge-planejado">Planejado — definido em 21/07/2026</span>
 
 A estratégia não é um modelo único, e sim um **time de modelos**, cada um dimensionado para a GPU e o papel certos (requisitos definidos: foco em programação, capacidade generalista e visão apurada). A implantação acontece em **duas ondas** — decisão consolidada em 21/07/2026 após análise cruzada de duas recomendações independentes:
@@ -10,7 +13,7 @@ A estratégia não é um modelo único, e sim um **time de modelos**, cada um di
 
 | Papel | Modelo | Tamanho (Q4) | GPU | Justificativa |
 |---|---|---|---|---|
-| **Executor agentic + generalista + visão de apoio** | **Devstral Small 2 (24B)** | ~14 GB | 5060 Ti (16 GB) dedicada | **68% SWE-bench Verified**, contexto de 256k, **multimodal** (visão nativa), Apache 2.0. O cérebro local da estação |
+| **Executor agentic + generalista + visão de apoio** | **Devstral Small 2 (24B)** <span class="badge badge-confirmar">Removido</span> | ~14 GB | 5060 Ti (16 GB) dedicada | **68% SWE-bench Verified**, contexto de 256k, **multimodal** (visão nativa), Apache 2.0. O cérebro local da estação |
 | **Especialista em visão / OCR** | **Qwen3-VL 8B** | ~6 GB | 4070 (12 GB) | Referência em OCR e multilíngue (PT-BR): telas do ERP, projetos Promob, PDFs escaneados, fotos de móveis; até 8 imagens por chamada |
 
 Com esses dois, a estação cobre ~95% do uso: programação agentic, visão apurada, interpretação de documentos e questões gerais (com o Claude como teto para o que for difícil — [Cap. 2](02-arquitetura.md)).
@@ -20,7 +23,7 @@ Com esses dois, a estação cobre ~95% do uso: programação agentic, visão apu
 | Papel | Modelo | Tamanho (Q4) | GPU | Gatilho |
 |---|---|---|---|---|
 | Autocomplete / FIM | Qwen3-Coder 8B | ~5,6 GB | 4070 | Quando o editor for integrado (ghost text) |
-| Generalista forte | Qwen 3.6 27B | ~18–22 GB | split nas duas GPUs | Se o Devstral Small 2 deixar a desejar em tarefas generalistas |
+| Generalista forte | Qwen 3.6 27B | ~18–22 GB | split nas duas GPUs | O Devstral Small 2 foi removido (seção 8.8); candidato **ainda não instalado** |
 | Experimento MoE | Qwen3-Coder 80B-A3B | ~8 GB VRAM + RAM | 5060 Ti + 64 GB RAM | Curiosidade de engenharia: *expert offload* com os 64 GB de RAM |
 | Embeddings (RAG — [Cap. 10](10-banco-de-conhecimento.md)) | a definir (bge-m3 / nomic-embed) | <2 GB | 4070 | Quando o RAG entrar (Fase 4 do Roadmap) |
 
@@ -35,6 +38,8 @@ Notas de operação:
 
 !!! note "Devstral Small 2 é a escolha inicial — não um casamento"
     Programação é o uso principal da estação, e o Devstral entra como cérebro por reunir agentic + generalista + visão + 256k num único modelo de 16 GB. Mas a escolha é **explicitamente provisória**: se a qualidade de código não atingir os critérios da seção 8.2, o primeiro teste comparativo é contra o **Qwen3-Coder** (ou o equivalente de código da época), rodando o PASES-Bench completo nos dois. Vence o que os números disserem.
+
+    **Atualização (11/10/2026):** o Devstral foi removido por resultados insatisfatórios e o Qwen3-Coder entrou em uso, **mas o PASES-Bench v1 completo não foi executado em nenhum dos dois** — a troca se apoia na avaliação do responsável e na medição de velocidade da seção 8.3, não nos critérios da seção 8.2.
 
 ## 8.2 Critérios de permanência e PASES-Bench <span class="badge badge-planejado">Planejado</span>
 
@@ -76,11 +81,26 @@ Série histórica de medições reais na estação (condições: Ollama, respost
 
 | 21/07/2026 | qwen3-vl:8b (imagem) | 4070 (troca de modelo em 3,5 s) | 3,5 s | 164,8 (inclui codificação da imagem) | **74,5** | ✅ | Descrição rica e precisa de foto urbana (objetos finos: loja de teclados, troncos pintados, vestuário de pedestre), resposta em PT-BR estruturado. ⚠️ Errou a localização (disse "Europa/Barcelona" para uma cena brasileira) — forte em *o que*, fraco em *onde*. Veredito de OCR/extração exata só com o PASES-Bench (fixture de PDF) |
 
+### Medição do `qwen-cline` (Qwen3-Coder 30B-A3B) — 11/10/2026
+
+`qwen-cline` é o mesmo modelo `qwen3-coder:30b` (30,5 B de parâmetros, MoE, Q4_K_M, 18 GB) com um *Modelfile* próprio: `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, `repeat_penalty 1.05`. É o que o Cline usa. Medição pela API do Ollama, com a VRAM livre antes (ComfyUI reiniciado), um prompt de código (validar CNPJ com testes) e 400 tokens gerados:
+
+| Medida | Valor |
+|---|---|
+| Tamanho em memória (`ollama ps`) | **22 GB** (pesos de 18 GB + cache de contexto), **100% em GPU** |
+| Divisão entre as GPUs | **~9,6 GB na RTX 4070** + **~12,3 GB na RTX 5060 Ti** |
+| Carga fria (do SATA) | 74,5 s; a avaliação do prompt na 1ª chamada levou 32 s (inclui aquecimento) |
+| Geração, 1ª chamada | **91 tok/s** |
+| Geração, 2ª chamada (a quente) | **149,5 tok/s** |
+| Temperatura / potência durante a geração | 52–57 °C / 66 e 95 W (GPU 0 e 1) |
+
+Cumpre com folga a meta de velocidade (≥ 20 tok/s) da seção 8.2. **Limites:** um único prompt e duas chamadas; **não mede qualidade** (o PASES-Bench v1 não foi executado), e a diferença entre a 1ª e a 2ª chamada mistura aquecimento com variação. Como ocupa 22 dos ~28,5 GB de VRAM somados, **não convive com o ComfyUI gerando vídeo** na 5060 Ti (descarregar com `ollama stop qwen-cline`).
+
 Pendente: execução completa do PASES-Bench v1 com as fixtures oficiais.
 
 ## 8.4 Runtime <span class="badge badge-existe">Existe — Ollama</span>
 
-**Ollama instalado e operacional desde 21/07/2026**, com a biblioteca de modelos em `/dados/modelos/ollama` (860 QVO), configurada via override do systemd (`OLLAMA_MODELS`). Onda 1 baixada: `devstral-small-2:24b` (15 GB) e `qwen3-vl:8b` (6,1 GB). Quando o AI Gateway entrar ([ADR-004](16-apendices/adrs.md#adr-004)), avaliar llama.cpp/vLLM para cargas específicas — a troca fica invisível para os projetos, que falam com o gateway.
+**Ollama instalado e operacional desde 21/07/2026**, com a biblioteca de modelos em `/dados/modelos/ollama` (860 QVO), configurada via override do systemd (`OLLAMA_MODELS`). Onda 1 baixada em julho: `devstral-small-2:24b` (15 GB, **depois removido**) e `qwen3-vl:8b` (6,1 GB). Estado atual do Ollama: `qwen3-coder:30b`, `qwen-cline` e `qwen3-vl:8b` (seção 8.8). O serviço escuta em `0.0.0.0:11434` com `OLLAMA_ORIGINS=*` — ver o levantamento de exposição no [Cap. 13](13-seguranca.md). Quando o AI Gateway entrar ([ADR-004](16-apendices/adrs.md#adr-004)), avaliar llama.cpp/vLLM para cargas específicas — a troca fica invisível para os projetos, que falam com o gateway.
 
 ## 8.5 Interface gráfica — Open WebUI <span class="badge badge-existe">Existe — no ar desde 22/07/2026</span>
 
@@ -131,7 +151,7 @@ Após o power limit + desligar a concorrência do WebUI, o apito caiu de **cont�
 2. O serviço do **Ollama inicia sozinho** (systemd).
 3. O **PostgreSQL e o Redis voltam sozinhos** (`restart: unless-stopped` no compose — [Cap. 6](06-infraestrutura.md)).
 
-Os **modelos não ficam residentes na VRAM**: são carregados na primeira chamada após o boot (a primeira resposta do Devstral leva ~30 s a mais — é o carregamento de 15 GB do disco; as seguintes são rápidas). Após alguns minutos sem uso, o modelo descarrega sozinho da VRAM — comportamento normal, não é falha.
+Os **modelos não ficam residentes na VRAM**: são carregados na primeira chamada após o boot (a primeira resposta do `qwen-cline` leva ~75 s a mais — medido: 74,5 s de carga fria de 18 GB do SATA; as seguintes são rápidas). Após alguns minutos sem uso, o modelo descarrega sozinho da VRAM — comportamento normal, não é falha.
 
 ### Verificação de 30 segundos (após qualquer boot)
 
@@ -146,11 +166,11 @@ Resultado esperado: `active` · dois containers `(healthy)` · dois modelos list
 ### Uso dos modelos
 
 ```bash
-# Chat interativo com o Devstral (sair com /bye)
-ollama run devstral-small-2:24b
+# Chat interativo com o LLM de código (sair com /bye)
+ollama run qwen-cline
 
 # Pergunta única
-ollama run devstral-small-2:24b "sua pergunta aqui"
+ollama run qwen-cline "sua pergunta aqui"
 
 # Visão — o caminho da imagem vai DENTRO da frase (evitar espaços no nome do arquivo)
 ollama run qwen3-vl:8b "Descreva esta imagem: /tmp/tela.png"
@@ -165,6 +185,52 @@ ollama ps
 sudo systemctl restart ollama                       # ressuscita o Ollama
 cd /srv/pases/core && docker compose up -d          # ressuscita PostgreSQL e Redis
 ```
+
+## 8.8 Inventário verificado da estação <span class="badge badge-existe">Existe — verificado em 11/10/2026</span>
+
+Levantado na própria máquina (`ollama list`, arquivos do ComfyUI, `docker ps`, `ss`), não por memória. **Sempre que o inventário e outro texto do manual divergirem, vale este.**
+
+### LLMs locais (Ollama, `/dados/modelos/ollama`, 24 GB)
+
+| Modelo | Tamanho | Papel | Observação |
+|---|---|---|---|
+| `qwen3-coder:30b` | 18 GB | Código e agentes | Qwen3-Coder 30B-A3B, Q4_K_M, contexto de 256k, com ferramentas ([ADR-012](16-apendices/adrs.md#adr-012)) |
+| `qwen-cline` | 18 GB (mesmo arquivo) | Código com o Cline | `num_ctx 32768`; velocidade na seção 8.3 |
+| `qwen3-vl:8b` | 6,1 GB | Visão e OCR | Benchmark de julho na seção 8.3 |
+| *Devstral Small 2 24B* | — | — | **Removido** (resultados insatisfatórios, informado pelo responsável) |
+
+### Imagem, vídeo e 3D (ComfyUI e Blender)
+
+| Peça | Para quê | Licença | Detalhes |
+|---|---|---|---|
+| Z-Image-Turbo | Imagem (modelo padrão) | Apache 2.0 | [8A.3](08a-imagem-video.md) |
+| FLUX.2 klein 4B (fp8) | Edição de imagem | Apache 2.0 | Bom em edição simples; **fraco em texto** |
+| Qwen-Image 2.1 | Imagem com texto | **Só avaliação** (não comercial) | [ADR-009](16-apendices/adrs.md#adr-009) |
+| LTX 2.5 22B distilled (int8-convrot) | Vídeo com áudio e fala | Licença própria (< US$ 10 mi) | [ADR-008](16-apendices/adrs.md#adr-008) |
+| Wan 2.2 TI2V-5B (fp16) | Vídeo (alternativa) | Apache 2.0 | Superado pelo LTX |
+| Kokoro + Whisper | Voz (texto→fala e fala→texto), CPU | Apache 2.0 / MIT | [8A.11](08a-imagem-video.md) |
+| Blender 5.0.1 | 3D, rig e render (Cycles na 5060 Ti) | GPL | [8A.12](08a-imagem-video.md) |
+
+Modelos do ComfyUI em disco: **91 GiB** (`/dados/modelos/comfyui`).
+
+### Serviços no ar
+
+Open WebUI (porta 3000), LobeChat com SearXNG, PostgreSQL e Redis (`pases-core`, só em `127.0.0.1`), ComfyUI (`127.0.0.1:8188`), Netdata (19999), Tailscale ativo. Exposição de portas: [Cap. 13](13-seguranca.md).
+
+### O que **não** temos (plano do manual ainda não feito)
+
+- **Qwen 3.6 27B** — candidato da Onda 2, não instalado.
+- **FLUX.1 [dev] e FLUX.2 [dev]** — não instalados; o [dev] foi descartado por exigir ≥ 24 GB e ter licença não comercial.
+- **Wan 2.1/2.2 de 14B** — nunca instalados.
+- **AI Gateway, RAG (não há Qdrant) e Agentes** — [Cap. 9](09-agentes.md) e [10](10-banco-de-conhecimento.md) seguem esqueletos.
+
+### Premissas comuns que as nossas medições **contradisseram**
+
+1. **"O ComfyUI soma a VRAM das duas GPUs."** Não soma: ele roda **só na RTX 5060 Ti (16 GB)**, fixada por `CUDA_VISIBLE_DEVICES=1` ([8A.2](08a-imagem-video.md)). Quem se divide entre as duas é o **Ollama**.
+2. **"O LTX 2.5 precisa de ~32 GB de VRAM."** É o requisito oficial; aqui roda em 16 GB com offload dinâmico para a RAM (~51 dos 59 GB).
+3. **"O LTX 2.5 roda em FP8."** Aqui roda em **int8-convrot**.
+4. **"Os modelos FLUX têm tipografia coerente."** No nosso teste o klein 4B errou texto em todas as imagens; o melhor foi o Qwen-Image 2.1.
+5. **"4K nativo" e "duração automática" do LTX 2.5:** **não testados** (só 704×1280 e 1280×704; o arquivo de duração automática não foi baixado).
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 

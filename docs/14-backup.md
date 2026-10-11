@@ -18,7 +18,7 @@ Nem tudo merece o mesmo tratamento. O princípio P6 (infraestrutura como código
 | **Banco de produção (Moventus)** | Supabase | Backups do próprio Supabase **+ export semanal próprio** para o Drive — nunca depender só do fornecedor | 24 h (Supabase) / 7 dias (cópia própria) |
 | **Dados de trabalho** | Documentos, fixtures do PASES-Bench, assets, notas | restic diário → disco local + Drive | 24 h |
 | **Segredos** | Chaves SSH, tokens de API, **senha do restic** | Gerenciador de senhas + cópia física fora da máquina (ver 14.4) | Zero — nunca só na estação |
-| **Modelos de IA** | Devstral, Qwen3-VL etc. (~dezenas de GB) | **Sem backup** — apenas um manifesto (`ollama list` exportado); tudo é re-baixável | N/A |
+| **Modelos de IA** | Qwen3-Coder 30B, Qwen3-VL, modelos do ComfyUI etc. (~115 GiB) | **Sem backup** — apenas um manifesto (`ollama list` exportado); tudo é re-baixável | N/A |
 | **Sistema operacional** | Ubuntu, pacotes, drivers | **Sem imagem** — reconstruível pelos Capítulos 4–5 + scripts versionados; Timeshift é só conveniência local | N/A |
 
 ## 14.2 Arquitetura 3-2-1

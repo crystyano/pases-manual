@@ -197,7 +197,7 @@ Os modelos ficam em `/dados/modelos/comfyui/` e a saída em `/scratch/comfyui/ou
 - **Começar pequeno:** dois modelos validados antes de acumular um catálogo — o ecossistema muda em meses, e cada modelo extra custa dezenas de GB de disco.
 
 ### Consequências e riscos
-- **Convivência com o Ollama:** o Devstral ocupa ~11 GB da mesma GPU; é preciso descarregá-lo (`ollama stop`) antes de gerar vídeo. Isso é uma regra de operação, não automatizada.
+- **Convivência com o Ollama:** o LLM carregado ocupa VRAM da mesma GPU (hoje o `qwen-cline`, 22 GB divididos entre as duas; na redação deste ADR era o Devstral, depois removido); é preciso descarregá-lo (`ollama stop`) antes de gerar vídeo. Isso é uma regra de operação, não automatizada.
 - **VRAM no limite em 720p:** o teste de 1280×704 usou 15,8 GB dos 15,85 GB; funcionou por offload para RAM, mas é a fronteira do hardware.
 - **Energia:** uma geração por vez; gerações paralelas foram a causa do alarme do nobreak em 22/07/2026.
 - **Sem benchmark padronizado ainda:** a qualidade foi avaliada visualmente (1 imagem e 3 quadros de vídeo). Falta uma suíte fixa para imagem/vídeo, equivalente ao PASES-Bench.
@@ -390,3 +390,37 @@ Adotar **Kokoro-82M** (Apache 2.0, pt-BR, 327 MB) e **faster-whisper `small`** (
 - A **avaliação humana reprovar** a voz do Kokoro ou a do LTX → reavaliar Piper, ou clonagem de voz sob licença comercial adequada.
 - Surgir necessidade de **falas longas, dois personagens ou sincronia labial** → testar Whisper maior e modelos de vídeo/dublagem com sincronia.
 - **Mudança de licença** de qualquer um dos dois modelos, ou a estação ganhar mais RAM/VRAM para rodar o Whisper maior na GPU.
+
+---
+
+## ADR-012 — Qwen3-Coder 30B-A3B como LLM local de código (o Devstral Small 2 foi removido) {#adr-012}
+
+**Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Registro:** 2026-10-11 (decisão tomada antes; a data exata da troca **não foi registrada** — o Ollama indica modelos instalados há cerca de 2 meses)
+
+### Objetivo
+Ter um LLM local de código e agentes (uso com o Cline) com qualidade aceitável para o responsável e velocidade interativa.
+
+### Alternativas avaliadas
+- **Devstral Small 2 24B** (a escolha original de julho, [Cap. 8.1](../08-inteligencia-artificial.md)): **removido por não apresentar resultados satisfatórios** (informado pelo responsável em 11/10/2026). Já no primeiro benchmark ele havia gerado uma função de CNPJ com erros reais (Cap. 8.3).
+- **Qwen 3.6 27B** (generalista): **não instalado nem testado.**
+- **Devstral 2 123B:** descartado em julho (não cabe nas GPUs).
+
+### Decisão
+Usar o **Qwen3-Coder 30B-A3B**, quantização Q4_K_M, via Ollama (`qwen3-coder:30b`), e um alias `qwen-cline` (mesmo arquivo; `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`) para o **Cline** (extensão do VS Code 4.0.10 encontrada instalada).
+
+### Justificativa
+- **Avaliação do responsável:** o Devstral não atendeu; o Qwen3-Coder foi mantido.
+- **Medição (11/10/2026, [Cap. 8.3](../08-inteligencia-artificial.md)):** 22 GB em memória, **100% em GPU**, dividido entre a 4070 (~9,6 GB) e a 5060 Ti (~12,3 GB); **91 tok/s** na 1ª chamada e **149,5 tok/s** a quente, bem acima da meta de 20 tok/s; carga fria de 74,5 s.
+- Por ser um modelo MoE com ~3 B de parâmetros ativos, é muito mais rápido que o Devstral denso (27,6 tok/s).
+
+### Consequências e riscos
+- **Qualidade não medida por nós:** o PASES-Bench v1 **não foi executado** nem para o Devstral nem para o Qwen3-Coder; a decisão repousa na avaliação do responsável.
+- **22 GB de VRAM** dos ~28,5 GB somados: **não convive com o ComfyUI gerando vídeo** na 5060 Ti; é preciso `ollama stop qwen-cline` antes (regra em [Cap. 8A.6](../08a-imagem-video.md)).
+- O **Ollama escuta em todas as interfaces, sem autenticação** ([Cap. 13](../13-seguranca.md)).
+- Uma única medição de velocidade (1 prompt, 400 tokens, 2 chamadas).
+
+### Quando revisar
+- Ao executar o **PASES-Bench v1** e o resultado divergir da avaliação atual.
+- Surgir candidato melhor (Qwen 3.6 27B ou outro) na mesma faixa de VRAM.
+- Se a convivência com o ComfyUI virar um incômodo frequente (reabrir a discussão de mais VRAM).
+
