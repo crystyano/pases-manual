@@ -198,7 +198,7 @@ Levantado na própria máquina (`ollama list`, arquivos do ComfyUI, `docker ps`,
 | Modelo | Tamanho | Papel | Observação |
 |---|---|---|---|
 | `qwen3.8:27b` | 17 GB | **Modelo principal** (código, agentes, generalista, com visão) | Qwen3.8-27B denso, Q4_K_M, Apache 2.0, contexto de 256k, com ferramentas e raciocínio ([ADR-013](16-apendices/adrs.md#adr-013)); instalado em 11/10/2026 |
-| `qwen38-cline` | 17 GB (mesmo arquivo) | **Modelo do Cline** desde 11/10/2026 | Cópia do `qwen38-bench`; o Cline roda com o raciocínio no padrão do modelo (ligado), diferente do benchmark |
+| `qwen38-cline` | 17 GB (mesmo arquivo) | **Modelo do Cline** desde 11/10/2026 | Cópia do `qwen38-bench`; o Cline acessa o Ollama pelo proxy `ollama-nothink` (`127.0.0.1:11435`), que força `think=false`, igual ao benchmark |
 | `qwen38-bench` | 17 GB (mesmo arquivo) | Execução do PASES-Bench | `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, os mesmos do `qwen-cline`; usado com o raciocínio desligado |
 | `qwen3-coder:30b` | 18 GB | Código e agentes, modelo rápido | Qwen3-Coder 30B-A3B, Q4_K_M, contexto de 256k, com ferramentas ([ADR-012](16-apendices/adrs.md#adr-012)) |
 | `qwen-cline` | 18 GB (mesmo arquivo) | Código com o Cline | `num_ctx 32768`; velocidade na seção 8.3; precisão na seção 8.9 |
@@ -221,7 +221,7 @@ Modelos do ComfyUI em disco: **91 GiB** (`/dados/modelos/comfyui`).
 
 ### Serviços no ar
 
-Open WebUI (porta 3000), LobeChat com SearXNG, PostgreSQL e Redis (`pases-core`, só em `127.0.0.1`), ComfyUI (`127.0.0.1:8188`), Netdata (19999), Tailscale ativo. Exposição de portas: [Cap. 13](13-seguranca.md).
+Open WebUI (porta 3000), LobeChat com SearXNG, PostgreSQL e Redis (`pases-core`, só em `127.0.0.1`), ComfyUI (`127.0.0.1:8188`), **proxy `ollama-nothink` (`127.0.0.1:11435`, serviço de usuário, desde 11/10/2026)**, Netdata (19999), Tailscale ativo. Exposição de portas: [Cap. 13](13-seguranca.md).
 
 ### O que **não** temos (plano do manual ainda não feito)
 
