@@ -3,7 +3,7 @@
 Este capítulo documenta a camada de IA da estação: modelos locais, o papel do Claude e, futuramente, o AI Gateway. A geração de **imagem e vídeo** (ComfyUI) está no [Capítulo 8A](08a-imagem-video.md).
 
 !!! warning "Estado atual dos LLMs (verificado em 11/10/2026)"
-    Este capítulo foi escrito em julho com o **Devstral Small 2** como "cérebro local". **Ele foi removido** por não ter apresentado resultados satisfatórios (informado pelo responsável). O que está no Ollama hoje é o **Qwen3-Coder 30B-A3B** (Q4_K_M), em uso com o Cline, além do Qwen3-VL 8B — ver o **inventário verificado na seção 8.8** e o [ADR-012](16-apendices/adrs.md#adr-012). As tabelas e benchmarks do Devstral abaixo são **histórico**.
+    Este capítulo foi escrito em julho com o **Devstral Small 2** como "cérebro local". **Ele foi removido** por não ter apresentado resultados satisfatórios (informado pelo responsável). O que está no Ollama hoje é o **Qwen3.8-27B** (Q4_K_M), **modelo principal desde 11/10/2026** pelo desempenho no PASES-Bench ([ADR-013](16-apendices/adrs.md#adr-013)), o **Qwen3-Coder 30B-A3B** (Q4_K_M), mantido como modelo rápido e usado com o Cline ([ADR-012](16-apendices/adrs.md#adr-012)), e o Qwen3-VL 8B — ver o **inventário verificado na seção 8.8**. As tabelas e benchmarks do Devstral abaixo são **histórico**.
 
 ## 8.1 Seleção inicial de modelos locais <span class="badge badge-planejado">Planejado — definido em 21/07/2026</span>
 
@@ -23,7 +23,7 @@ Com esses dois, a estação cobre ~95% do uso: programação agentic, visão apu
 | Papel | Modelo | Tamanho (Q4) | GPU | Gatilho |
 |---|---|---|---|---|
 | Autocomplete / FIM | Qwen3-Coder 8B | ~5,6 GB | 4070 | Quando o editor for integrado (ghost text) |
-| Generalista forte | Qwen 3.6 27B | ~18–22 GB | split nas duas GPUs | O Devstral Small 2 foi removido (seção 8.8); candidato **ainda não instalado** |
+| Generalista forte | Qwen 3.6 27B → **Qwen3.8-27B** | ~17 GB | split nas duas GPUs | O Devstral Small 2 foi removido (seção 8.8); o sucessor **Qwen3.8-27B foi instalado em 11/10/2026 e é o modelo principal** ([ADR-013](16-apendices/adrs.md#adr-013)); o 3.6 não foi instalado |
 | Experimento MoE | Qwen3-Coder 80B-A3B | ~8 GB VRAM + RAM | 5060 Ti + 64 GB RAM | Curiosidade de engenharia: *expert offload* com os 64 GB de RAM |
 | Embeddings (RAG — [Cap. 10](10-banco-de-conhecimento.md)) | a definir (bge-m3 / nomic-embed) | <2 GB | 4070 | Quando o RAG entrar (Fase 4 do Roadmap) |
 
@@ -103,7 +103,7 @@ Pendente: o PASES-Bench v1 com as fixtures **oficiais** (arquivos reais do Moven
 
 ## 8.4 Runtime <span class="badge badge-existe">Existe — Ollama</span>
 
-**Ollama instalado e operacional desde 21/07/2026**, com a biblioteca de modelos em `/dados/modelos/ollama` (860 QVO), configurada via override do systemd (`OLLAMA_MODELS`). Onda 1 baixada em julho: `devstral-small-2:24b` (15 GB, **depois removido**) e `qwen3-vl:8b` (6,1 GB). Estado atual do Ollama: `qwen3-coder:30b`, `qwen-cline` e `qwen3-vl:8b` (seção 8.8). O serviço escuta em `0.0.0.0:11434` com `OLLAMA_ORIGINS=*` — ver o levantamento de exposição no [Cap. 13](13-seguranca.md). Quando o AI Gateway entrar ([ADR-004](16-apendices/adrs.md#adr-004)), avaliar llama.cpp/vLLM para cargas específicas — a troca fica invisível para os projetos, que falam com o gateway.
+**Ollama instalado e operacional desde 21/07/2026**, com a biblioteca de modelos em `/dados/modelos/ollama` (860 QVO), configurada via override do systemd (`OLLAMA_MODELS`). Onda 1 baixada em julho: `devstral-small-2:24b` (15 GB, **depois removido**) e `qwen3-vl:8b` (6,1 GB). **Versão:** atualizada de 0.32.1 para **0.40.3** em 11/10/2026 (instalador oficial `ollama.com/install.sh`), porque o `qwen3.8:27b` exige versão mais nova; os overrides do systemd (`OLLAMA_MODELS`, `OLLAMA_HOST`, `OLLAMA_ORIGINS`) foram preservados. Estado atual do Ollama: `qwen3.8:27b`, `qwen38-bench`, `qwen3-coder:30b`, `qwen-cline` e `qwen3-vl:8b` (seção 8.8). O serviço escuta em `0.0.0.0:11434` com `OLLAMA_ORIGINS=*` — ver o levantamento de exposição no [Cap. 13](13-seguranca.md). Quando o AI Gateway entrar ([ADR-004](16-apendices/adrs.md#adr-004)), avaliar llama.cpp/vLLM para cargas específicas — a troca fica invisível para os projetos, que falam com o gateway.
 
 ## 8.5 Interface gráfica — Open WebUI <span class="badge badge-existe">Existe — no ar desde 22/07/2026</span>
 
@@ -193,11 +193,13 @@ cd /srv/pases/core && docker compose up -d          # ressuscita PostgreSQL e Re
 
 Levantado na própria máquina (`ollama list`, arquivos do ComfyUI, `docker ps`, `ss`), não por memória. **Sempre que o inventário e outro texto do manual divergirem, vale este.**
 
-### LLMs locais (Ollama, `/dados/modelos/ollama`, 24 GB)
+### LLMs locais (Ollama, `/dados/modelos/ollama`, 40 GB)
 
 | Modelo | Tamanho | Papel | Observação |
 |---|---|---|---|
-| `qwen3-coder:30b` | 18 GB | Código e agentes | Qwen3-Coder 30B-A3B, Q4_K_M, contexto de 256k, com ferramentas ([ADR-012](16-apendices/adrs.md#adr-012)) |
+| `qwen3.8:27b` | 17 GB | **Modelo principal** (código, agentes, generalista, com visão) | Qwen3.8-27B denso, Q4_K_M, Apache 2.0, contexto de 256k, com ferramentas e raciocínio ([ADR-013](16-apendices/adrs.md#adr-013)); instalado em 11/10/2026 |
+| `qwen38-bench` | 17 GB (mesmo arquivo) | Execução do PASES-Bench | `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, os mesmos do `qwen-cline`; usado com o raciocínio desligado |
+| `qwen3-coder:30b` | 18 GB | Código e agentes, modelo rápido | Qwen3-Coder 30B-A3B, Q4_K_M, contexto de 256k, com ferramentas ([ADR-012](16-apendices/adrs.md#adr-012)) |
 | `qwen-cline` | 18 GB (mesmo arquivo) | Código com o Cline | `num_ctx 32768`; velocidade na seção 8.3; precisão na seção 8.9 |
 | `qwen3-vl:8b` | 6,1 GB | Visão e OCR | Benchmark de julho na seção 8.3 |
 | *Devstral Small 2 24B* | — | — | **Removido** (resultados insatisfatórios, informado pelo responsável) |
@@ -235,7 +237,7 @@ Open WebUI (porta 3000), LobeChat com SearXNG, PostgreSQL e Redis (`pases-core`,
 4. **"Os modelos FLUX têm tipografia coerente."** No nosso teste o klein 4B errou texto em todas as imagens; o melhor foi o Qwen-Image 2.1.
 5. **"4K nativo" e "duração automática" do LTX 2.5:** **não testados** (só 704×1280 e 1280×704; o arquivo de duração automática não foi baixado).
 
-## 8.9 PASES-Bench v1 (LLM) com fixtures sintéticas — Qwen3-Coder <span class="badge badge-existe">Existe — 11/10/2026</span>
+## 8.9 PASES-Bench v1 (LLM) com fixtures sintéticas — Qwen3-Coder e Qwen3.8 <span class="badge badge-existe">Existe — 11/10/2026</span>
 
 Primeira execução do PASES-Bench v1 em um LLM. Código, fixtures e resultados em `/srv/pases/llm-bench` (README próprio). **Modelo testado:** `qwen-cline` (= `qwen3-coder:30b`, Q4_K_M, com `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, `repeat_penalty 1.05`, os parâmetros que o Cline usa), `num_predict 4096`, sementes 1 a 3, **3 repetições por item**, ComfyUI parado e VRAM livre.
 
@@ -293,9 +295,40 @@ Exemplos reais dos erros de limite em parcelas: PIX com valor **exatamente** R$ 
 
 **As duas ficam abaixo da meta de 90%.** A segunda definição foi adotada **depois de ver os resultados**, o que é um viés; só se justifica porque uma fixture era amostra fraca. Por isso as duas estão registradas. **Lição prática (para o uso com o Cline):** o modelo refatora bem a estrutura, mas pode **quebrar o código** (esquecer um parâmetro) ou **alterar um limite sem avisar**; **rode sempre os testes depois de uma refatoração.**
 
+### Comparação com o Qwen3.8-27B <span class="badge badge-existe">Existe — 11/10/2026</span>
+
+O Qwen3.8-27B (denso, Q4_K_M, [ADR-013](16-apendices/adrs.md#adr-013)) rodou a **mesma suíte** (3 repetições; refatoração com 5 por fixture). Modelo `qwen38-bench`: `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, `repeat_penalty 1.0` (o `qwen-cline` usa 1,05) e **raciocínio desligado** (`BENCH_THINK=off`), para ficar comparável a um modelo sem raciocínio. **O modo de raciocínio ligado não foi testado.** Resultados em `results/2026-10-11_2113_qwen38-bench/` e `results/2026-10-11_2117_qwen38-bench_refatoracao/`.
+
+| | **Qwen3.8-27B** | **Qwen3-Coder** |
+|---|---|---|
+| Geração de código (item 1) | **98,6%** | 89,9% |
+| Agente (item 6) | **100%** (5 a 6 passos) | 97,2% (10 passos) |
+| Refatoração, média das 3 fixtures (item 2) | **79,1%** | 64,4% |
+| **Precisão em código, com as 3 fixtures** | **92,5%** (meta 90%: ✅) | 83,8% (❌) |
+| Precisão em código, definição original | 99,5% | 62,4% |
+| Velocidade de geração (mediana) | 69 tok/s | 140 tok/s |
+| Tempo até o 1º token, a quente | 0,12 s | 0,1 s |
+| RAM de pico / temperatura / potência | 18,9 GB / 75 °C / 226 W | 11,8 GB / 64 °C / 202 W |
+| GPU | 100% GPU, 18 GB dividido nas duas | 100% GPU, 22 GB |
+
+Refatoração por fixture (testes passados em cada repetição):
+
+| Fixture | Qwen3.8-27B | Qwen3-Coder |
+|---|---|---|
+| Pedido (193) | 193, 193, 193, **72**, 193: **87,5%** (a 4ª repetição: `NameError: DESCOTO_BEMVINDO10_MINIMO`) | 0% (`NameError: cupom` em 8 de 8) |
+| Parcelas (241) | 159, 241, 241, 241, 159: **86,4%** | 93,1% |
+| Produção (141) | 141, 69, 27, 141, 69: **63,4%** | 100% |
+
+**Leitura honesta:**
+- Na média o Qwen3.8 é melhor e **passa a meta de 90%** com as três fixtures. Essa definição foi adotada **antes** de rodá-lo (na seção anterior), mas as fixtures são do assistente e o conjunto é pequeno.
+- **A ordem entre os modelos se inverte conforme a fixture:** o Qwen3-Coder vence em produção e (por pouco) em parcelas; o Qwen3.8 vence com folga em pedido. Com 5 repetições, o ranking por fixture é frágil.
+- O Qwen3.8 **também quebra comportamento ao refatorar** (5 de 15 execuções com falha). **Rodar os testes depois de refatorar vale para os dois.**
+- Ele gasta **metade da velocidade** e mais RAM, o que é aceitável nesta estação (59 GiB).
+- **Não medido:** raciocínio ligado, contextos longos, uso real no Cline e a qualidade do português (item 5, só checagem automática).
+
 ### O que isso significa
 - Como **agente** (o uso com o Cline) o modelo foi muito bem; como **refatorador**, teve resultado **desigual**: na fixture de pedido introduziu um erro que derruba tudo e o repetiu **8 de 8** vezes; em outras duas fixtures se saiu bem, mas com erros **silenciosos nos limites** (ver a seção anterior). Uma falha repetível pesa mais que uma ocasional.
-- A troca do Devstral pelo Qwen3-Coder ([ADR-012](16-apendices/adrs.md#adr-012)) **permanece** (decisão do responsável), mas agora com um dado: o modelo atual **reprova no critério de precisão em código** deste benchmark. **O Devstral nunca foi executado nesta suíte**; não dá para dizer qual é melhor.
+- A troca do Devstral pelo Qwen3-Coder ([ADR-012](16-apendices/adrs.md#adr-012)) **permanece** (decisão do responsável), mas com um dado: o Qwen3-Coder **reprova no critério de precisão em código** deste benchmark. **O Devstral nunca foi executado nesta suíte** (o responsável não quer mais usá-lo); a comparação foi feita com o Qwen3.8 (seção abaixo).
 
 ### Limites
 - **Poucas fixtures:** uma por item (três no item 2), todas escritas pelo assistente, em português e do mesmo tema (marcenaria).
@@ -308,6 +341,7 @@ Exemplos reais dos erros de limite em parcelas: PIX com valor **exatamente** R$ 
 ```bash
 cd /srv/pases/llm-bench && ./bench_llm.py --validar && ./bench_llm.py --modelo qwen-cline --reps 3
 ./bench_llm.py --modelo qwen-cline --reps 5 --refatoracao   # só o item 2, nas 3 fixtures de refatoração
+BENCH_THINK=off ./bench_llm.py --modelo qwen38-bench --reps 3   # modelos com raciocínio: força desligado (on = ligado; sem a variável, o padrão do modelo)
 ```
 O ComfyUI precisa estar parado (VRAM livre) e `ollama ps` vazio.
 

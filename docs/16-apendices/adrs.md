@@ -430,3 +430,40 @@ Executado com **fixtures sintéticas** (3 repetições; [Cap. 8.9](../08-intelig
 ### Atualização (2026-10-11) — refatoração repetida com outras fixtures
 A refatoração foi repetida em **duas fixtures novas** (5 repetições cada; [Cap. 8.9](../08-inteligencia-artificial.md)). **Pedido:** 0% de novo, `NameError: cupom` em 8 de 8 tentativas. **Parcelas:** 93,1%, com erros de limite (`>=` trocado por `>`) em 4 de 5. **Produção:** 100%. Item 2 com as três fixtures: **64,4%**; precisão em código: **83,8%** (62,4% pela definição original), **ainda abaixo da meta de 90%**. A segunda definição foi adotada depois de ver os resultados; as duas estão registradas. A decisão **se mantém**. Uso recomendado: aceitar refatorações do modelo **só com testes rodando**, porque ele pode quebrar o código ou mudar limites sem avisar. Limites: três fixtures do assistente, do mesmo tema; Devstral nunca executado na suíte.
 
+### Atualização (2026-10-11) — Qwen3.8-27B passa a ser o modelo principal
+O PASES-Bench no Qwen3.8-27B ([Cap. 8.9](../08-inteligencia-artificial.md)) deu **92,5%** de precisão em código contra **83,8%** do Qwen3-Coder, com metade da velocidade. Por decisão do responsável, o **Qwen3.8 é o modelo principal** ([ADR-013](#adr-013)) e o **Qwen3-Coder permanece instalado** como modelo rápido. Este ADR continua aceito para esse papel; a configuração do Cline **não foi alterada** nesta sessão.
+
+## ADR-013 — Qwen3.8-27B como LLM principal; Qwen3-Coder mantido como modelo rápido {#adr-013}
+
+**Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-11 · **Decisão do responsável**, apoiada pelo PASES-Bench
+
+### Objetivo
+Ter um LLM local principal com a melhor qualidade que cabe nas duas GPUs (28 GB de VRAM), sem abrir mão de um modelo rápido para uso interativo.
+
+### Alternativas avaliadas
+- **Qwen3.8-27B** (denso, com visão, Apache 2.0, contexto de 256k, Q4_K_M de ~17 GB): **escolhido.** Os benchmarks que a própria Qwen publica o colocam à frente do Qwen3.6-27B (SWE-bench Pro 61,7 contra 53,5; LiveCodeBench v6 90,3 contra 83,9); são números do fornecedor e não foram reproduzidos.
+- **Qwen3-Coder 30B-A3B:** **mantido** como modelo rápido (140 tok/s). Perdeu no PASES-Bench: 83,8% contra 92,5%.
+- **Qwen3.8-Flash-Next** (MoE de 125B, licença própria) e **Qwen3.8-2.4T**: **não cabem** (centenas de GB de pesos).
+- **Qwen3-Coder-Next** (MoE de 80B, 3B ativos): só com offload pesado para a RAM; **não testado.**
+- **Devstral Small 2:** o responsável **não quer mais usá-lo**; não foi reinstalado.
+
+### Decisão
+Instalar `qwen3.8:27b` pelo Ollama e adotá-lo como **modelo principal**; manter `qwen3-coder:30b` e o alias `qwen-cline`. Os dois somam 40 GB em disco (`/dados/modelos/ollama`). O Ollama foi **atualizado de 0.32.1 para 0.40.3**, exigência do modelo novo.
+
+### Justificativa (medido em 11/10/2026, Cap. 8.9)
+- Precisão em código **92,5%** (meta 90%) contra 83,8%; geração de código 98,6% contra 89,9%; agente 100% em 5 a 6 passos contra 97,2% em 10.
+- 100% em GPU, 18 GB divididos entre as duas placas, tempo até o 1º token de 0,12 s.
+
+### Consequências e riscos
+- **Metade da velocidade** (69 contra 140 tok/s) e mais RAM (18,9 contra 11,8 GB de pico).
+- **A vantagem não é uniforme:** o Qwen3-Coder foi melhor na fixture de produção (100% contra 63,4%). Fixtures do assistente, uma amostra pequena.
+- **Também quebra comportamento ao refatorar** (5 de 15 execuções): rodar os testes depois é obrigatório.
+- **Medido com o raciocínio desligado**; ligado não foi testado. Sem uso real no Cline ainda; **a configuração do Cline não foi alterada**.
+- O Ollama continua escutando em `0.0.0.0` sem autenticação ([Cap. 13](../13-seguranca.md)).
+- 17 GB de VRAM: **não convive com o ComfyUI gerando vídeo**; `ollama stop` antes, como no ADR-012.
+
+### Quando revisar
+- Ao rodar o PASES-Bench com as **fixtures oficiais**, ou com o raciocínio ligado, e o resultado divergir.
+- Se o uso real no Cline contrariar a medição.
+- Surgir modelo melhor na mesma faixa de VRAM (por exemplo, um Qwen3.8 Coder).
+
