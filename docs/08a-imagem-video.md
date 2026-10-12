@@ -589,6 +589,26 @@ Primeiro teste do **Wan-Animate-2** (conjunto destilado, `int8_convrot`; seção
 
 Arquivos: `/scratch/comfyui/output/video/animate2_teste1_00001_.mp4`, `animate2_teste1_origem_x_resultado.mp4` e `animate2_teste1_comparacao.png`.
 
+#### Segundo teste: a leoa como referência
+
+Mesmo vídeo de movimento, mesmo executor e mesmos parâmetros, trocando só a referência e o prompt.
+
+| Item | Valor |
+|---|---|
+| Referência | `texugo3_leoa_base.png`, a leoa **sozinha**, de pé sobre as quatro patas (768×1360). A `leoa_ref_quadro01.png` foi descartada por mostrar o Texugo e a leoa juntos |
+| Prompt | leoa realista de pelo dourado, peito creme e olhos âmbar, "em pé e dançando", numa savana dourada com céu azul (o fundo da referência, diferente do teste do Texugo, que pedia neon) |
+| Resultado | **sucesso em 411 s**, **pico de 15,4 GiB de VRAM**, 81 quadros em 480×848 |
+
+**Leitura do assistente** (miniaturas; **avaliação do responsável pendente**):
+- **Identidade e cenário:** pelagem dourada, peito creme, rosto e savana se mantêm nos 8 quadros.
+- **Movimento:** a leoa acompanha passos, giro e braços da bailarina, inclusive o plano fechado inicial.
+- **Anatomia, o ponto fraco:** o corpo vira o de uma **pessoa com cabeça de leoa**: ereta, pernas finas e longas, tronco musculoso, **punhos fechados no lugar de patas**, cabeça pequena para o corpo; a cauda aparece.
+- **Consequência:** serve para uma **leoa antropomórfica dançando**, não para uma leoa que se move como leoa. O movimento de origem é humano e é transferido como tal.
+
+**Para o episódio "Lanchinho errado":** a leoa ficaria consistente no visual, mas moveria o corpo como gente. Uma mordida no Texugo exigiria um **vídeo de movimento de quadrúpede**; **não testado**, e não se sabe se o Animate-2 transfere o movimento dos quatro membros.
+
+Arquivos: `/scratch/comfyui/output/video/animate2_teste2_leoa_00001_.mp4`, `animate2_teste2_leoa_origem_x_resultado.mp4` e `animate2_teste2_leoa_comparacao.png`.
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
