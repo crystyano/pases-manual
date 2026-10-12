@@ -431,7 +431,7 @@ Executado com **fixtures sintéticas** (3 repetições; [Cap. 8.9](../08-intelig
 A refatoração foi repetida em **duas fixtures novas** (5 repetições cada; [Cap. 8.9](../08-inteligencia-artificial.md)). **Pedido:** 0% de novo, `NameError: cupom` em 8 de 8 tentativas. **Parcelas:** 93,1%, com erros de limite (`>=` trocado por `>`) em 4 de 5. **Produção:** 100%. Item 2 com as três fixtures: **64,4%**; precisão em código: **83,8%** (62,4% pela definição original), **ainda abaixo da meta de 90%**. A segunda definição foi adotada depois de ver os resultados; as duas estão registradas. A decisão **se mantém**. Uso recomendado: aceitar refatorações do modelo **só com testes rodando**, porque ele pode quebrar o código ou mudar limites sem avisar. Limites: três fixtures do assistente, do mesmo tema; Devstral nunca executado na suíte.
 
 ### Atualização (2026-10-11) — Qwen3.8-27B passa a ser o modelo principal
-O PASES-Bench no Qwen3.8-27B ([Cap. 8.9](../08-inteligencia-artificial.md)) deu **92,5%** de precisão em código contra **83,8%** do Qwen3-Coder, com metade da velocidade. Por decisão do responsável, o **Qwen3.8 é o modelo principal** ([ADR-013](#adr-013)) e o **Qwen3-Coder permanece instalado** como modelo rápido. Este ADR continua aceito para esse papel; a configuração do Cline **não foi alterada** nesta sessão.
+O PASES-Bench no Qwen3.8-27B ([Cap. 8.9](../08-inteligencia-artificial.md)) deu **92,5%** de precisão em código contra **83,8%** do Qwen3-Coder, com metade da velocidade. Por decisão do responsável, o **Qwen3.8 é o modelo principal** ([ADR-013](#adr-013)) e o **Qwen3-Coder permanece instalado** como modelo rápido. Este ADR continua aceito para esse papel. O **Cline** foi apontado para o Qwen3.8 no mesmo dia (alias `qwen38-cline`, ver ADR-013).
 
 ## ADR-013 — Qwen3.8-27B como LLM principal; Qwen3-Coder mantido como modelo rápido {#adr-013}
 
@@ -458,7 +458,7 @@ Instalar `qwen3.8:27b` pelo Ollama e adotá-lo como **modelo principal**; manter
 - **Metade da velocidade** (69 contra 140 tok/s) e mais RAM (18,9 contra 11,8 GB de pico).
 - **A vantagem não é uniforme:** o Qwen3-Coder foi melhor na fixture de produção (100% contra 63,4%). Fixtures do assistente, uma amostra pequena.
 - **Também quebra comportamento ao refatorar** (5 de 15 execuções): rodar os testes depois é obrigatório.
-- **Medido com o raciocínio desligado**; ligado não foi testado. Sem uso real no Cline ainda; **a configuração do Cline não foi alterada**.
+- **Medido com o raciocínio desligado**; ligado não foi testado. Sem uso real no Cline ainda: o Cline foi **apontado para o Qwen3.8** (alias `qwen38-cline`, cópia do `qwen38-bench`, `num_ctx 32768`) e, **sem a chave `think=off` que o benchmark usou, o Qwen3.8 raciocina por padrão** (nível médio), o que o deixa mais lento e **não foi medido**. Para voltar ao modelo rápido: trocar `planModeOllamaModelId` e `actModeOllamaModelId` em `~/.cline/data/globalState.json` (ou no painel do Cline) para `qwen-cline:latest`.
 - O Ollama continua escutando em `0.0.0.0` sem autenticação ([Cap. 13](../13-seguranca.md)).
 - 17 GB de VRAM: **não convive com o ComfyUI gerando vídeo**; `ollama stop` antes, como no ADR-012.
 
