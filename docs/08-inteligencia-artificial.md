@@ -327,6 +327,27 @@ Refatoração por fixture (testes passados em cada repetição):
 - Ele gasta **metade da velocidade** e mais RAM, o que é aceitável nesta estação (59 GiB).
 - **Não medido:** raciocínio ligado, contextos longos, uso real no Cline e a qualidade do português (item 5, só checagem automática).
 
+### Teste prático: jogo de kart em Three.js <span class="badge badge-existe">Existe — 11/10/2026</span>
+
+Fora do benchmark, o `qwen38-cline` (pelo proxy sem raciocínio, ADR-013) recebeu o pedido de um **jogo de corrida de karts 3D no estilo Mario Kart**, em um único `index.html` com Three.js 0.160 por CDN, **com nomes e visual originais** (nada da Nintendo). O prompt pedia pista em spline, 3 adversários, 3 voltas, derrapagem com turbo, itens, minimapa, HUD em português e câmera de perseguição. Arquivos em `/home/pases/pases-testes/qwen38-kart/` (**fora do Git**): `prompt.md`, `index.html` (v1), `index_v2.html`, `index_v3.html` e as respostas `resposta_v*.txt`.
+
+| Rodada | O que se pediu | Saída do modelo | Resultado |
+|---|---|---|---|
+| **v1** | O prompt original | 13.545 tokens, 62 tok/s, 3 min 43 s, 1.081 linhas | Carrega **sem erros no console**; HUD, contagem, minimapa, 4 karts e cenário aparecem. **A pista (asfalto) não aparece**: só zebras flutuando sobre a grama |
+| **v2** | "A pista não aparece" (sem dar a causa) | 13.541 tokens, 3 min 22 s | Trocou a técnica por uma bem mais complicada; o asfalto aparece só como **faixa ao lado**, e os karts largam na grama. **Correção incompleta** |
+| **v3** | 3 defeitos, **cada um com a causa que eu indiquei** | 14.083 tokens, 3 min 38 s | **Pista corrigida** e **"VAI!" some**. O terceiro item (velocidade) é discutido abaixo |
+
+**Causa da pista invisível (v1):** a fita é uma malha com índices `(a, c, b, b, c, d)` que fica com a face voltada para baixo, e o material desenha um só lado. **Uma linha** (`side: THREE.DoubleSide`) resolve; o modelo, sem a dica, não achou isso e reescreveu a técnica inteira. Defeito que **nenhum teste automático do benchmark pegaria**: só abrir o jogo mostra.
+
+**Um erro meu no diagnóstico:** na v3 pedi também a correção de uma "velocidade presa em 10 km/h" cuja **causa eu não tinha verificado**. Era um artefato do meu teste: eu só segurava acelerar, o kart saía da pista na primeira curva e ia para a grama, onde o limite de 10 km/h é proposital. Os karts da IA andam a 48–53 km/h na pista, e o do jogador voltou a acelerar ao reentrar nela. Esse item **não é um defeito confirmado**, e a mudança de medida de distância que o modelo fez a meu pedido **não foi validada**.
+
+**Em aberto:**
+- O responsável relatou **tela azul** (só o céu) ao acelerar depois do "VAI!" no Chrome dele. **Não reproduzi** no navegador do painel, em nenhuma versão (nenhum valor inválido em câmera ou kart). Sem o console do Chrome dele, a causa é desconhecida.
+- **Dirigibilidade real** (voltas, itens, derrapagem, tela final): não foi testada com direção contínua, e a v3 aguarda o teste do responsável.
+- Um jogo, uma semente, uma pessoa avaliando: **é uma observação**, não uma medição.
+
+**O que isso mostra do modelo:** ele entrega em ~4 minutos um jogo grande, **sem erro de sintaxe e quase completo**, mas com defeitos de lógica e renderização que só aparecem executando; corrigiu 2 de 3 problemas **depois de receber a causa**. Reforça a regra da seção anterior: **testar o resultado**, e não confiar só em "carrega sem erro".
+
 ### O que isso significa
 - Como **agente** (o uso com o Cline) o modelo foi muito bem; como **refatorador**, teve resultado **desigual**: na fixture de pedido introduziu um erro que derruba tudo e o repetiu **8 de 8** vezes; em outras duas fixtures se saiu bem, mas com erros **silenciosos nos limites** (ver a seção anterior). Uma falha repetível pesa mais que uma ocasional.
 - A troca do Devstral pelo Qwen3-Coder ([ADR-012](16-apendices/adrs.md#adr-012)) **permanece** (decisão do responsável), mas com um dado: o Qwen3-Coder **reprova no critério de precisão em código** deste benchmark. **O Devstral nunca foi executado nesta suíte** (o responsável não quer mais usá-lo); a comparação foi feita com o Qwen3.8 (seção abaixo).
