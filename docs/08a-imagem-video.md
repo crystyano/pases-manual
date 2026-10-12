@@ -560,6 +560,33 @@ O template oficial do klein usa o text encoder `qwen_3_4b` em **bf16** (8,04 GB)
 !!! warning "Limites"
     3 sementes; a melhora do título da etiqueta (1 → 2 de 3) está dentro do ruído. O **modelo** do klein continua em fp8 (o bf16 do modelo, 7,2 GB, não foi testado).
 
+### Wan-Animate-2 destilado — o Texugo no lugar de uma bailarina <span class="badge badge-existe">Existe — 12/10/2026</span>
+
+Primeiro teste do **Wan-Animate-2** (conjunto destilado, `int8_convrot`; seção 8A.8): **imagem de referência + vídeo de movimento → o personagem executando o movimento**, sem extração de pose. Executor versionado: `/srv/pases/comfyui-config/bench/animate2.py` (fluxo em formato de API equivalente ao do template `video_wan_animate2_distilled`).
+
+| Item | Valor |
+|---|---|
+| Referência | `frente.jpg` do Texugo (corpo inteiro, fundo liso, 548×812) |
+| Movimento | `street_dance_drive.mp4`, o vídeo de exemplo do ComfyUI (8.229.122 bytes, 720×1280, 121 quadros a 24,1 fps), baixado do repositório oficial de modelos de fluxo |
+| Prompt de personagem e fundo | texugo gordinho de pelagem preta com crina creme, cicatriz e sorriso de dentes, em uma rua de cidade chuvosa com neon à noite |
+| Parâmetros | 81 quadros, 482×854 pedidos (saiu em **480×848**), 10 passos, amostrador `lcm`, `cfg 1`, semente 1, `WanAnimate2Cache` em GPU (`int8`) |
+| Resultado | **sucesso em 420 s**, **pico de 14,7 GiB de VRAM** na 5060 Ti, vídeo de 3,36 s (81 quadros) |
+
+**Leitura do assistente** (miniaturas de 8 quadros contra os da origem; **a avaliação do responsável vale mais**, e os testes anteriores já mostraram que o assistente lê miniaturas de forma otimista):
+- **Identidade:** crina creme, cicatriz e sorriso de dentes aparecem iguais nos 8 quadros, que era o ponto fraco do LTX 2.5.
+- **Movimento:** a pose acompanha a bailarina (passos largos, giro, braços abertos), inclusive o plano fechado do início.
+- **Defeitos vistos:** o fundo muda (neon roxo no lugar do cenário original) e nos primeiros quadros ainda aparece o fundo cinza da referência; o texugo anda ereto, com proporção de brinquedo, não de animal.
+- **Não avaliado:** o movimento em vídeo (suavidade, tremidos); só um clipe, uma semente, uma referência.
+
+**Observações técnicas:**
+- Só **81 quadros** por execução; vídeos mais longos exigem encadear execuções (o template usa um subgrafo repetido).
+- O `ffprobe` do vídeo de entrada acusa 60 fps (`r_frame_rate`), mas a taxa média real é 24,1 fps; vale conferir `avg_frame_rate`.
+- O ComfyUI precisou ser reiniciado para enxergar a nova pasta `clip_vision/` (agora mapeada no `extra_model_paths.yaml`).
+
+**Decisão sobre o vídeo de movimento:** o responsável pediu para colocar o Texugo em um personagem de um **Short do YouTube** (trecho de *O Exterminador do Futuro 2*, repostado por um canal de terceiros). **Não foi baixado:** os termos do YouTube proíbem baixar vídeos e o trecho é material de um estúdio; o resultado seria uma obra derivada, problema para uso na marca. Alternativas: vídeo próprio ou licenciado como movimento.
+
+Arquivos: `/scratch/comfyui/output/video/animate2_teste1_00001_.mp4`, `animate2_teste1_origem_x_resultado.mp4` e `animate2_teste1_comparacao.png`.
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
@@ -681,7 +708,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 | **Wan 2.2 A14B** (GGUF Q4) | Mais qualidade de movimento que o 5B, mas apertado em 16 GB e sem áudio. Perdeu urgência diante do LTX 2.5; reavaliar só se surgir uma limitação do LTX. |
 | **Wan 2.2 5B** | **Mantido** como alternativa de licença limpa (Apache 2.0), mas deixou de ser o modelo principal de vídeo. |
 | **Wan 3.0** | **Não é candidato (avaliado em 12/10/2026): sem pesos abertos.** Beta fechado desde 06/08/2026, só por API (Alibaba Cloud Model Studio e Qwen Cloud). Conferido nas fontes primárias: o Hugging Face `Wan-AI` não tem repositório Wan 3.0 (o mais novo é o `Wan2.2-Animate-2-14B`, de 08–13/08/2026) e o GitHub `Wan-Video` também não (o mais recente é o Wan2.2, Apache 2.0). Dois sites afirmam pesos sob Apache 2.0 sem citar repositório; **contradizem os repositórios e não foram considerados**. Especificações (30 s com áudio) vêm de material da Alibaba, **não verificadas**. Rodaria só como serviço de nuvem, o que foge da regra de rodar tudo local. **Reavaliar se aparecer um repositório oficial com pesos.** |
-| **Wan2.2-Animate-2-14B** | **Candidato; conjunto destilado baixado e verificado em 12/10/2026 (tamanho e SHA-256 dos 4 arquivos conferidos contra o repositório), ainda não testado.** *Correção:* a versão anterior desta linha dizia "inviável, sem suporte no ComfyUI", baseada no **cartão do modelo, que está desatualizado**; o ComfyUI instalado (`comfyui_workflow_templates` 0.11.78) já tem os nós nativos `WanAnimate2ToVideo` e `WanAnimate2Cache` e os fluxos `video_wan_animate2` e `video_wan_animate2_distilled`. Anima um personagem a partir de uma **imagem de referência** e de um **vídeo de movimento**, **sem extração de pose**; fundo e câmera pelo texto (Apache 2.0, sem acesso restrito). O repositório do ComfyUI, `Comfy-Org/Wan-Animate-2`, tem **111,06 GiB**; o transformer `int8_convrot` (**15,51 GiB**, o mesmo formato do LTX 2.5) deve caber na 5060 Ti de 16 GB com descarga para a RAM. Conjunto destilado (10 passos): transformer `wan_animate_2_distill_int8_convrot` **16.653.175.528 bytes**, T5 fp8 (6.735.906.897 bytes, **já existia** para o Wan 2.2 5B, SHA-256 conferido), `clip_vision_h` 1.264.219.396 bytes e VAE `Wan2_1_VAE_bf16` 253.806.278 bytes: **cerca de 23,2 GiB** ao todo. O cartão oficial do modelo prevê 8 GPUs A800 para 720p, sem VRAM mínima. **Velocidade e qualidade nesta estação: desconhecidas.** Alternativa: Animate-14B v1 (`wan2.2_animate_14B_int8_convrot`, 17,15 GiB), que exige extração de pose. |
+| **Wan2.2-Animate-2-14B** | **Candidato; conjunto destilado baixado, verificado (SHA-256) e testado em 12/10/2026: o Texugo dançou no lugar de uma bailarina, 420 s para 81 quadros, pico de 14,7 GiB de VRAM ([8A.5](#wan-animate-2-destilado-o-texugo-no-lugar-de-uma-bailarina-existe-12102026)); identidade consistente na leitura do assistente, avaliação do responsável pendente.** *Correção:* a versão anterior desta linha dizia "inviável, sem suporte no ComfyUI", baseada no **cartão do modelo, que está desatualizado**; o ComfyUI instalado (`comfyui_workflow_templates` 0.11.78) já tem os nós nativos `WanAnimate2ToVideo` e `WanAnimate2Cache` e os fluxos `video_wan_animate2` e `video_wan_animate2_distilled`. Anima um personagem a partir de uma **imagem de referência** e de um **vídeo de movimento**, **sem extração de pose**; fundo e câmera pelo texto (Apache 2.0, sem acesso restrito). O repositório do ComfyUI, `Comfy-Org/Wan-Animate-2`, tem **111,06 GiB**; o transformer `int8_convrot` (**15,51 GiB**, o mesmo formato do LTX 2.5) deve caber na 5060 Ti de 16 GB com descarga para a RAM. Conjunto destilado (10 passos): transformer `wan_animate_2_distill_int8_convrot` **16.653.175.528 bytes**, T5 fp8 (6.735.906.897 bytes, **já existia** para o Wan 2.2 5B, SHA-256 conferido), `clip_vision_h` 1.264.219.396 bytes e VAE `Wan2_1_VAE_bf16` 253.806.278 bytes: **cerca de 23,2 GiB** ao todo. O cartão oficial do modelo prevê 8 GPUs A800 para 720p, sem VRAM mínima. **Velocidade e qualidade nesta estação: desconhecidas.** Alternativa: Animate-14B v1 (`wan2.2_animate_14B_int8_convrot`, 17,15 GiB), que exige extração de pose. |
 | **Wan-Dancer-14B** | Pesos abertos (Apache 2.0) de 17/07/2026, para dança. **Não avaliado** (tamanho em disco, VRAM e suporte no ComfyUI por conferir). |
 | **WanGP** (`deepbeepmeep/Wan2GP`) | Interface alternativa com gestão agressiva de memória (afirma H3 de 15 s em 1080p com ~11 GB de VRAM — alegação do projeto, não verificada). Visto em vídeo de terceiros em 08/10/2026. **Adiado:** o LTX 2.5 já roda bem no ComfyUI; reconsiderar se a RAM apertada ou vídeos de 720p mais longos virarem problema. Se for testado: `git clone` + `uv` em `/srv/pases/wan2gp`, fora do Git, só em `127.0.0.1`. |
 | **Pinokio** | **Descartado:** instala apps rodando scripts que executam qualquer comando na máquina (revisão humana só dos apps em destaque, isolamento por pasta, não sandbox) e foge do princípio de infraestrutura reconstruível (P6). |
