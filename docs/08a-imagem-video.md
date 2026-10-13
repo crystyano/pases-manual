@@ -653,6 +653,25 @@ Referência `texugo3_n1.png` (o Texugo **de quatro**, vindo de frente numa trilh
 
 Arquivos em `/scratch/comfyui/output/video/` (fora do Git): `animate2_teste5_texugo_quad_*` (o vídeo, o lado a lado `_origem_x_resultado.mp4` e a folha `_comparacao.png`).
 
+#### Sexto teste: uma cena com dois personagens
+
+Referência `texugo3_n6.png` (o Texugo de pé em 3/4, 768×1360) com um **movimento de origem de dois personagens**: um trecho de 3 s (73 quadros, a partir de 1,5 s) do episódio v5 (`Texugo_Bolado_Leoa_v5_15s_vertical.mp4`, geração nossa), em que o Texugo se ergue ao lado da leoa até ficarem cara a cara. Mesmo executor e parâmetros; prompt de um texugo se erguendo nas patas de trás ao lado de uma leoa, na savana.
+
+| Item | Valor |
+|---|---|
+| Resultado | **sucesso em 350 s**, **pico de 15,5 GiB de VRAM**, 73 quadros em 480×848 |
+
+**Avaliação do responsável (12/10/2026), após abrir a pasta e assistir: "o resultado ficou bom".** Parecer geral, sem detalhe por critério; não diz se considerou bom o fato de a leoa ter sumido.
+
+**Leitura do assistente** (miniaturas de 8 quadros):
+- **O Texugo segue o movimento do texugo de origem** (agacha, se ergue nas patas de trás, pula, abre a boca); crina, pelo preto e sorriso se mantêm.
+- **A leoa desaparece em todos os quadros.** O vídeo de origem tinha a leoa ao lado e cara a cara; no resultado resta só o Texugo, olhando para cima de boca aberta, **sem destinatário**. A mordida e o contato se perderam.
+- **O cenário foi reinventado** (savana com árvores e trilha), pela descrição do prompt.
+
+**Conclusão:** o Animate-2 **anima um personagem por execução**; uma cena de contato entre dois **não sai de uma execução só**. Caminhos possíveis, **não testados**: gerar os dois em execuções separadas, com o mesmo movimento e câmera, e **compor**; usar uma **referência com os dois juntos** (`leoa_ref_quadro01.png`); ou manter o **LTX 2.5** nas cenas de contato e o Animate-2 nos planos de um personagem.
+
+Arquivos em `/scratch/comfyui/output/video/` (fora do Git): `animate2_teste6_dois_*` (o vídeo, o lado a lado `_origem_x_resultado.mp4` e a folha `_comparacao.png`).
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
