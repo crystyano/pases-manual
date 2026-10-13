@@ -599,7 +599,9 @@ Mesmo vídeo de movimento, mesmo executor e mesmos parâmetros, trocando só a r
 | Prompt | leoa realista de pelo dourado, peito creme e olhos âmbar, "em pé e dançando", numa savana dourada com céu azul (o fundo da referência, diferente do teste do Texugo, que pedia neon) |
 | Resultado | **sucesso em 411 s**, **pico de 15,4 GiB de VRAM**, 81 quadros em 480×848 |
 
-**Leitura do assistente** (miniaturas; **avaliação do responsável pendente**):
+**Avaliação do responsável (12/10/2026), após assistir ao vídeo: "o vídeo da leoa ficou ok".** Um parecer geral e **mais morno** que o do Texugo ("bom"), sem detalhe por critério; não diz se a anatomia humanoide incomodou. A leitura do assistente abaixo, de miniaturas, continua válida só como descrição.
+
+**Leitura do assistente** (miniaturas):
 - **Identidade e cenário:** pelagem dourada, peito creme, rosto e savana se mantêm nos 8 quadros.
 - **Movimento:** a leoa acompanha passos, giro e braços da bailarina, inclusive o plano fechado inicial.
 - **Anatomia, o ponto fraco:** o corpo vira o de uma **pessoa com cabeça de leoa**: ereta, pernas finas e longas, tronco musculoso, **punhos fechados no lugar de patas**, cabeça pequena para o corpo; a cauda aparece.
