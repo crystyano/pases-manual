@@ -905,6 +905,38 @@ Cycles, 720×1280, denoise ligado: **~1,3 s por quadro** a 48 amostras; o clipe 
 ### Usos possíveis
 Clipes só com o texugo usando as animações existentes (bravo, correndo, assustado, dançando, jogando no celular); usar renders do 3D como **âncora de identidade** (quadro inicial) dos planos de IA; criar a leoa em 3D (custo e qualidade **não avaliados**).
 
+## 8A.13 Cena "O Troco do Texugo": plano, produção e resultado <span class="badge badge-existe">Existe — 12/10/2026</span>
+
+**Pedido:** uma cena de **pelo menos 15 s** em que a leoa morde o Texugo e ele se livra mordendo o focinho dela, com as melhores técnicas e ferramentas disponíveis. Arquivos em `/home/pases/Texugo Bolado/video/local-pc/troco-do-texugo/` (**fora do Git**; LEIA-ME próprio): `final/Texugo_Bolado_O_Troco_do_Texugo_local_v1.mp4` (22 s, 704×1280, 24 fps, com áudio).
+
+### O que se sabia (testes do Cap. 8A.5)
+- O LTX 2.5 faz cenas com os dois personagens, mas a **física de contato e a identidade** são fracas; o episódio v1 foi avaliado como "muito ruim".
+- O Wan-Animate-2 anima **um personagem por execução** (a leoa some numa cena de dois); serve para planos de um personagem.
+- Faltava uma ferramenta de composição por máscara (só ffmpeg); o FLUX.2 klein compõe duas imagens de forma limitada.
+
+### O plano (aprovado) e o que mudou na execução
+Roteiro de 7 planos (16,5 s), com a regra de **esconder o contato** por corte e reação, e uma imagem-chave do "troco" escolhida entre dezenas de candidatas. **Na execução:**
+- Em vez de gerar tudo de novo, **5 dos planos foram reaproveitados do episódio v3** (Texugo andando, leoa espreitando, bote, captura pela nuca, leoa fugindo, "Lanchinho errado."), que já tinham sido aprovados em consistência; o episódio ficou com **22 s**, não 16,5.
+- Foram feitos **dois planos novos**, com a técnica de **primeiro e último quadro** do LTX 2.5: **a mordida do Texugo** (do quadro 46 do plano da captura até um quadro-chave) e **o recuo da leoa**. O plano da captura foi **cortado exatamente no quadro onde começa a mordida**, sem salto.
+- O contato **foi tentado de forma explícita** (quadros-chave com o Texugo agarrado ao focinho), e não apenas implícito; o plano de reserva por corte não foi necessário.
+- A fala final ficou "Lanchinho errado." (o responsável não escolheu outra).
+
+### Quadros-chave e planos novos
+| Etapa | Candidatas | Escolhida |
+|---|---|---|
+| Quadro-chave da mordida (FLUX.2 klein, 2 referências) | 8 (~9 s cada) | **2007**: o Texugo pequeno agarrado ao queixo e ao focinho, a leoa de olhos arregalados |
+| Quadro-chave do recuo (FLUX.2 klein) | 6 | **3004**: a leoa de patas no focinho, chorando; o Texugo em primeiro plano com tufos de pelo dela nos dentes (a cara do mascote, com crina e cicatriz) |
+| Plano da mordida (LTX 2.5 primeiro/último quadro, 3 s, 704×1280) | sementes 101 e 102 | **101** (0 quedas de nitidez; 155 s e 67 s) |
+| Plano do recuo (idem) | sementes 101 e 102 | **101** (3 quedas, no movimento brusco; 143 s e 67 s) |
+
+### Resultado (avaliação do assistente; **a do responsável está pendente**)
+- **A história se lê de ponta a ponta:** o Texugo anda, a leoa espreita, o bote, a captura pela nuca, o troco, o recuo da leoa e o Texugo de pé com a fala final.
+- **A mordida não é clara:** o Texugo aparece **agarrado ao queixo e ao focinho**, de boca aberta; os dentes **cravados** no focinho não são nítidos. Lê-se como "ele se agarra ao focinho dela".
+- **No recuo** a leoa fica **de pé como uma pessoa** (patas no rosto), diferente do resto; e há um instante em que o Texugo, rolando na poeira, **perde a forma**.
+- **Áudio:** o Whisper leu a fala final como "Lançinho Errado" (variação do reconhecedor); **ninguém ouviu o áudio**.
+- O medidor de nitidez acusa 24 quedas no vídeo inteiro, mas **confunde cortes de plano com quedas**.
+- Um vídeo, uma montagem; 5 de 8 planos já tinham os defeitos registrados no v3.
+
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - **Avaliação humana** das rodadas `2026-10-08_1800` e `2026-10-08_2320_ltx` (fichas em `bench/results/`)
