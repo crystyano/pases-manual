@@ -632,6 +632,25 @@ Mesma referência da leoa (`texugo3_leoa_base.png`, de frente, sobre as quatro p
 
 Arquivos em `/scratch/comfyui/output/video/` (fora do Git): `animate2_teste3_quad_andando_*` e `animate2_teste4_quad_correndo_*` (o vídeo, o lado a lado `_origem_x_resultado.mp4` e a folha `_comparacao.png`).
 
+#### Quinto teste: o Texugo andando de quatro
+
+Referência `texugo3_n1.png` (o Texugo **de quatro**, vindo de frente numa trilha de terra da savana, 768×1360) com o **movimento do teste 3** (a leoa andando de frente, `quad_n2_andando.mp4`, 73 quadros). Mesmo executor e parâmetros. Prompt: texugo gordinho de quatro patas, pelo preto e crina creme, em uma savana com trilha de terra, andando em direção à câmera.
+
+| Item | Valor |
+|---|---|
+| Resultado | **sucesso em 350 s**, **pico de 15,5 GiB de VRAM**, 73 quadros em 480×848 |
+
+**Leitura do assistente** (miniaturas de 8 quadros; **avaliação do responsável pendente**):
+- **Identidade:** crina creme, pelo preto, orelhas, olhos desconfiados e cicatriz se mantêm nos 8 quadros; trilha, céu e árvores da referência também.
+- **Movimento:** acompanha o passo da leoa, com as patas alternando e as garras visíveis; aproxima-se da câmera e termina agachado, em close.
+- **Expressão:** nos últimos quadros ele **sorri de lado**; **não vem do movimento de origem**, o modelo a inventou.
+- **Anatomia:** continua **quadrúpede**, sem virar bípede como no teste da dança.
+- **Limites:** uma semente, miniaturas, 3 s de vídeo; suavidade e patas de perto não foram avaliadas.
+
+**Leitura de conjunto dos testes 1 a 5:** o Animate-2 transfere o **movimento**, mas a **forma do corpo** segue a referência e a **orientação** também (teste 4). Com origem e referência **compatíveis** (humano com humanoide; quadrúpede com quadrúpede), o resultado foi o melhor de personagem do projeto. Com origem humana e referência quadrúpede (teste 2), o corpo virou humanoide. **Uma mordida entre dois personagens segue sem solução**, porque o modelo anima **um personagem por vez**.
+
+Arquivos em `/scratch/comfyui/output/video/` (fora do Git): `animate2_teste5_texugo_quad_*` (o vídeo, o lado a lado `_origem_x_resultado.mp4` e a folha `_comparacao.png`).
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
