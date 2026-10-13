@@ -640,7 +640,9 @@ Referência `texugo3_n1.png` (o Texugo **de quatro**, vindo de frente numa trilh
 |---|---|
 | Resultado | **sucesso em 350 s**, **pico de 15,5 GiB de VRAM**, 73 quadros em 480×848 |
 
-**Leitura do assistente** (miniaturas de 8 quadros; **avaliação do responsável pendente**):
+**Avaliação do responsável (12/10/2026), após assistir ao vídeo: "o vídeo do Texugo ficou bom".** Parecer geral, sem detalhe por critério; igual ao do teste 1 (dança), mais favorável que o da leoa ("ok").
+
+**Leitura do assistente** (miniaturas de 8 quadros):
 - **Identidade:** crina creme, pelo preto, orelhas, olhos desconfiados e cicatriz se mantêm nos 8 quadros; trilha, céu e árvores da referência também.
 - **Movimento:** acompanha o passo da leoa, com as patas alternando e as garras visíveis; aproxima-se da câmera e termina agachado, em close.
 - **Expressão:** nos últimos quadros ele **sorri de lado**; **não vem do movimento de origem**, o modelo a inventou.
