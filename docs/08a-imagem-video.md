@@ -611,6 +611,27 @@ Mesmo vídeo de movimento, mesmo executor e mesmos parâmetros, trocando só a r
 
 Arquivos: `/scratch/comfyui/output/video/animate2_teste2_leoa_00001_.mp4`, `animate2_teste2_leoa_origem_x_resultado.mp4` e `animate2_teste2_leoa_comparacao.png`.
 
+#### Terceiro e quarto testes: movimento de quadrúpede
+
+Mesma referência da leoa (`texugo3_leoa_base.png`, de frente, sobre as quatro patas), mesmo executor e parâmetros, trocando o **vídeo de movimento** por dois clipes de **quadrúpede gerados por nós** com o LTX 2.5 na produção do episódio da leoa (73 quadros a 24 fps; sem material de terceiros). Com 73 quadros em vez de 81, porque os clipes têm só 73.
+
+| Teste | Movimento de origem | Tempo | Pico de VRAM |
+|---|---|---|---|
+| 3 | leoa andando **de frente** para a câmera (`clip_n2_101`) | 375 s | 15,2 GiB |
+| 4 | leoa correndo **de costas**, levantando poeira (`clip_n5_101`) | 350 s | 15,5 GiB |
+
+**Leitura do assistente** (miniaturas de 8 quadros; **avaliação do responsável pendente**):
+- **Teste 3 (andando):** funciona. A leoa **continua quadrúpede**, sem virar bípede como no teste com a dança; pelagem consistente, savana preservada, passo e aproximação até o close acompanhados.
+- **Teste 4 (correndo de costas):** **o sentido não foi transferido.** A origem corre de costas, afastando-se; o resultado mostra a leoa **de frente, vindo para a câmera**, sem a poeira e com passada de caminhada. A orientação parece vir da **imagem de referência**, não do vídeo de movimento.
+
+**Limites:**
+- As origens **já mostram essa leoa**; o teste 3 prova que movimento de quadrúpede é transferido, mas **não é um teste forte de trocar de personagem**.
+- Uma semente por teste, só miniaturas; suavidade e patas em vídeo não foram avaliadas.
+- Para o "Lanchinho errado": andar e se aproximar funciona; **uma mordida entre duas criaturas continua sem solução**, porque o modelo anima **um personagem por vez**.
+- **Não testado:** o Texugo como referência com movimento de quadrúpede (andar de quatro).
+
+Arquivos em `/scratch/comfyui/output/video/` (fora do Git): `animate2_teste3_quad_andando_*` e `animate2_teste4_quad_correndo_*` (o vídeo, o lado a lado `_origem_x_resultado.mp4` e a folha `_comparacao.png`).
+
 ### 8A.5b PASES-Bench Visual v1 <span class="badge badge-existe">Existe — 08/10/2026</span>
 
 Suíte padronizada de imagem e vídeo, no mesmo espírito do PASES-Bench dos LLMs ([Cap. 8.2](08-inteligencia-artificial.md)). Fica em `/srv/pases/comfyui-config/bench/` (versionada):
