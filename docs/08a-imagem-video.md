@@ -784,7 +784,7 @@ Registro do que foi analisado em 07/10/2026 (fontes secundárias; os requisitos 
 |---|---|
 | **LTX-2.3** (FP8) | Mesma família do 2.5, que o superou. Não é necessário instalar. |
 | **LTX 2.5** | **Adotado como modelo de vídeo principal** ([ADR-008](16-apendices/adrs.md#adr-008)). **Correção:** a avaliação de 07/10 dizia que em 16 GB só rodaria por quantizações GGUF da comunidade; na prática, o transformer **oficial** `int8-convrot` (21,5 GB) rodou com offload dinâmico, sem GGUF, a 19 s por vídeo curto. As fontes secundárias estavam desatualizadas. |
-| **MiniMax H3** | Pesos abertos desde 03/08/2026 (33B parâmetros), com suporte nativo no ComfyUI. A versão aberta sai em **no máximo 768p**; o upscaler de 2K é só da API. Um site afirma restrição de licença para uso em EUA/UE/Reino Unido/Coreia — **não confirmado**; ler a licença no Hugging Face antes de qualquer investimento. |
+| **MiniMax H3** | **Instalado e testado em 14–15/10/2026** ([8A.14](#8a14-minimax-h3-licenca-instalacao-e-testes-existe-15102026)): 33B densos, vídeo com **áudio estéreo**, 4 a 15 s, 768p de base (o 2K é um módulo hospedado, não aberto). Roda no ComfyUI instalado com a versão `pruned_int8_convrot` (19,53 GiB): **115–186 s** por clipe de 3 a 10 s, **15,2 GiB de VRAM** e **50–52 GiB de RAM**. **Fala em português funciona** (conferida pelo Whisper). **Licença com restrição de território: exclui UE, Reino Unido, Coreia do Sul e EUA, e proíbe exibir os resultados fora do território**; o responsável aceitou os termos para testar; **publicar no Instagram é arriscado** (ver 8A.14). |
 | **Qwen-Image 2.1** | **Instalado para avaliação** (seção 8A.3): melhor que o Z-Image em texto com acentos, mas licença **só não comercial** — decisão em [ADR-009](16-apendices/adrs.md#adr-009). |
 | **Qwen-Image 2512** (fp8, Apache 2.0) | **Testado e removido (09/10/2026):** texto com erros em todas as imagens, 218–370 s por imagem. Não é alternativa ao 2.1 nem ao Z-Image ([8A.5](#qwen-image-2512-apache-20-reprovado-e-removido-existe-09102026)). |
 | **FLUX.2 klein 4B** | **Instalado e aprovado para edições simples** (cor, material, remoção) a 5 s; fraco em compor objetos de duas imagens ([8A.5](#flux2-klein-4b-edicao-de-imagens-existe-09102026)). Em **texto→imagem** é o mais rápido (3 s) mas **fraco em texto** ([8A.5](#flux2-klein-4b-texto-para-imagem-existe-09102026)). Apache 2.0; decisão em [ADR-010](16-apendices/adrs.md#adr-010). |
@@ -936,6 +936,51 @@ Roteiro de 7 planos (16,5 s), com a regra de **esconder o contato** por corte e 
 - **Áudio:** o Whisper leu a fala final como "Lançinho Errado" (variação do reconhecedor); **ninguém ouviu o áudio**.
 - O medidor de nitidez acusa 24 quedas no vídeo inteiro, mas **confunde cortes de plano com quedas**.
 - Um vídeo, uma montagem; 5 de 8 planos já tinham os defeitos registrados no v3.
+
+## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
+
+### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
+Modelo omni-modal de **33B parâmetros densos** (codificador de texto baseado no Qwen3-VL-32B) que gera **vídeo com áudio estéreo** (voz, efeitos e música juntos), de **4 a 15 s a 24 fps**, em vários formatos (inclui 9:16), com **768p de base**. O 2K depende do módulo **H3-Regenerate-2K**, hospedado e **não aberto**; o pré-processador H3-Context-IR também não. Duas versões: **fl2va** (texto, primeiro e último quadro) e **ref2va** (até 9 imagens, 3 vídeos e 3 áudios de referência). Falas estáveis em **11 idiomas** (a lista não foi conferida, mas o português funcionou nos testes).
+
+### A licença (MiniMax H3 Community License, 02/08/2026), lida por inteiro
+- **Território:** o mundo, **exceto a União Europeia, o Reino Unido, a Coreia do Sul e os Estados Unidos**. O Brasil está dentro.
+- **Resultados também são restritos:** proíbe "usar, reproduzir, distribuir ou **exibir** o modelo ou os seus resultados **fora do território**". Pela **leitura literal**, publicar um vídeo gerado numa rede aberta ao mundo, como o Instagram, contraria a licença. **Não é aconselhamento jurídico**; a licença convida a pedir autorização à MiniMax (`api@minimax.io`).
+- **Faturamento:** acima de **US$ 20 milhões por ano** em produtos e serviços comerciais, exige autorização por escrito.
+- **Marca:** produtos ou serviços comerciais que usam o H3 devem exibir "MiniMax H3" na interface.
+- **Treino:** não se pode usar o modelo nem seus resultados para melhorar outro modelo de IA.
+- **Aceite:** o responsável **aceitou os termos em 14/10/2026** para baixar e testar. Uso permitido hoje: **teste, comparação e uso interno**; **publicação de vídeos de venda fica pendente de confirmação com a MiniMax ou um advogado**.
+
+### Instalação (somente a versão fl2va; 39,14 GiB, tamanho e SHA-256 conferidos contra o repositório)
+Origem: `Comfy-Org/MiniMax-H3` no Hugging Face (Apache não: licença própria, acima). O ComfyUI instalado (0.39.0) já tem os nós `MiniMaxH3*` e os fluxos de imagem→vídeo, referência→vídeo, texto→vídeo, continuação, multiquadros e ControlNet; **não foi preciso atualizar nem reiniciar**.
+
+| Arquivo | Pasta | Tamanho |
+|---|---|---|
+| `minimax_h3_fl2va_pruned_int8_convrot` | `diffusion_models/` | 20.970.379.616 bytes (19,53 GiB) |
+| `qwen3vl_32b_minimax_h3_nvfp4_awq` (não exige Blackwell) | `text_encoders/` | 15.687.142.551 bytes (14,61 GiB) |
+| `minimax_h3_video_vae_int8_convrot` | `vae/` | 2.811.065.184 bytes |
+| `minimax_h3_audio_vae_fp32` | `vae/` | 605.254.808 bytes |
+| `minimax_h3_fl2v_turbo_4step_v1.0_768p_comfyui_bf16` (LoRA turbo, 4 passos) | `loras/` | 1.956.192.992 bytes |
+
+**Não instalados:** a versão `ref2va` (+19,53 GiB), a `w6a8` (14,89 GiB, sem descrição) e os ControlNets. "Pruned" não é explicado pelo repositório; o efeito na qualidade é **desconhecido**. O download em partes paralelas não acelerou (a rede da estação dá 3 a 5 MB/s, ~2,5 h para tudo); o baixador ficou versionado (`baixar_paralelo.py`). Executor: `/srv/pases/comfyui-config/bench/h3.py`.
+
+### Testes (primeiro e último quadro; 4 passos com o LoRA turbo; `res_multistep`)
+| Teste | Tamanho e duração | Tempo | VRAM / RAM de pico |
+|---|---|---|---|
+| 1. Mordida (mesmos quadros do plano do LTX do 8A.13) | 480×832, 3 s | 115 s (com a carga dos modelos) | 15,2 GiB / 50,3 GiB |
+| 2. O mesmo, resolução oficial | 736×1312, 3 s | 150 s | 15,4 GiB / 51,5 GiB |
+| 3. Fala em português (Texugo de pé) | 480×832, 4 s | 60 s | 15,2 GiB / 51,5 GiB |
+| 4. Clipe longo (Texugo anda, para, se ergue e fala) | 480×832, **10 s** | **186 s** | 15,2 GiB / 51,6 GiB |
+
+**Leitura do assistente** (miniaturas e Whisper; **avaliação do responsável pendente**; o áudio não foi ouvido por ninguém):
+- **Contra o LTX 2.5 (mesmos quadros):** os dois chegam ao quadro-chave; o H3 aproxima o Texugo do focinho mais cedo e a leoa abre bem a boca, mais expressiva. A 736×1312 a mordida aparece em dois tempos (ele agarra o focinho com a leoa de olhos fechados, depois ela arregala os olhos). Custo parecido com o do LTX (67–155 s por 3 s a 704×1280), mas o H3 usa **quase toda a RAM**.
+- **Fala em português:** o Whisper transcreveu "Hahaha, lanchinho errado." (teste 3) e "Hmm, lanchinho errado." (teste 4); a **pronúncia** só quem ouve julga.
+- **Clipe de 10 s:** coerente do início ao fim, com a crina e a cicatriz estáveis; um detalhe laranja estranho na barriga do Texugo nos últimos quadros. O LTX não faz mais de ~4 s por clipe sem emendas.
+
+### Limites e cuidados
+- **RAM:** 50–52 GiB de 59; o ComfyUI com o H3 **não convive com o Ollama nem com outros serviços pesados**.
+- Uma semente por teste, miniaturas, 480×832 na maioria; a 768p só um teste.
+- Não testados: `ref2va` (vídeo de referência), ControlNet, clipes de 15 s, resolução oficial em clipes longos, o 2K.
+- Os arquivos dos testes ficam em `/scratch/comfyui/output/video/` (`h3_teste*`), fora do Git.
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
