@@ -951,7 +951,9 @@ Roteiro de 7 planos (16,5 s), com a regra de **esconder o contato** por corte e 
 
 **Comparado com a versão 1 (LTX, 22 s, 8 planos montados):** a mordida aparece de forma mais clara, a voz é a aprovada e a cena não tem emendas; em troca, a 736×1312 custa **~27 min por tomada** e **~52 GiB de RAM**, e o vídeo fica sob a **licença restrita do H3**.
 
-**Limites:** na captura o Texugo fica pequeno e com o peito mais branco por instantes; há um quadro de transição em que ele vira um borrão; o Whisper ouviu "E rapaz" no lugar de "Ih, rapaz". **Avaliação do responsável pendente.**
+**Limites:** na captura o Texugo fica pequeno e com o peito mais branco por instantes; há um quadro de transição em que ele vira um borrão; o Whisper ouviu "E rapaz" no lugar de "Ih, rapaz".
+
+**Avaliação do responsável (17/10/2026):** "gostei muito da qualidade do vídeo e da voz do Texugo; somente o **enredo não tem muito sentido**, mas a qualidade gráfica está muito boa". Primeiro episódio com **qualidade visual e voz aprovadas**; o ponto a melhorar passa a ser o **roteiro**, não a técnica.
 
 **Lições:** uma geração de 15 s com cortes no prompt resolve continuidade de personagens, som e voz melhor que montar planos; **a resolução maior não garante resultado melhor** (a semente 21 piorou a 736×1312), então vale escolher a semente a 480×832 (~6 min) e só então renderizar na resolução final, aceitando que o resultado muda.
 
