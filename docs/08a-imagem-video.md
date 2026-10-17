@@ -976,10 +976,34 @@ Origem: `Comfy-Org/MiniMax-H3` no Hugging Face (Apache não: licença própria, 
 - **Fala em português:** o Whisper transcreveu "Hahaha, lanchinho errado." (teste 3) e "Hmm, lanchinho errado." (teste 4); a **pronúncia** só quem ouve julga.
 - **Clipe de 10 s:** coerente do início ao fim, com a crina e a cicatriz estáveis; um detalhe laranja estranho na barriga do Texugo nos últimos quadros. O LTX não faz mais de ~4 s por clipe sem emendas.
 
+### Voz do Texugo com áudio de referência (ref2va) <span class="badge badge-existe">Existe — 16/10/2026</span>
+
+**Pedido do responsável:** a dicção do H3 em português agradou, mas a voz não combinava com o personagem — "cara de mau, mas malandro gente boa", sotaque malandro, voz não muito aguda.
+
+**Só com descrição no prompt não deu certo.** Oito variações (A–H), mudando só a direção de voz, foram **todas reprovadas**: as "roucas e graves" (A–C, ~132–139 Hz de mediana) ficaram graves demais; as "leves e claras" (E, F, H, ~250–258 Hz) também não agradaram. O responsável mandou como referência o **episódio 1** (gerado na nuvem pelo Seedance 2.0 em 28/09/2026), cuja fala mede **258 Hz** — o mesmo tom da H, reprovada. Conclusão: o que diferencia a voz certa é **timbre e jeito**, que texto não descreve.
+
+**Solução: o modo `ref2va` com um áudio de referência.** Instalados (mesma licença, SHA-256 conferido): `minimax_h3_ref2va_pruned_int8_convrot` (20.970.379.616 bytes) e o LoRA `minimax_h3_ref2v_turbo_4step_v0.1` (1.956.193.000 bytes), **21,35 GiB**. Executor: `/srv/pases/comfyui-config/bench/h3_ref.py` (imagens e áudios por etiqueta, `<Picture 1>`, `<Audio 1>`). Referência: a fala do episódio 1 recortada (2,1 s, 32 kHz).
+
+| Rodada | Direção | Resultado |
+|---|---|---|
+| R1–R2 | copiar a voz de `<Audio 1>`, dicção clara | timbre próximo (269–286 Hz), mas **fala inventada** depois da frase |
+| **R3** | copiar timbre e atitude, **falar devagar e articulado** | **timbre preferido pelo responsável**; ainda com fala inventada |
+| R4–R6 | frase curta + "depois fica em silêncio"; R6 com a referência cortada | fala inventada continua; com a referência cortada ele **repete o áudio de referência** |
+| R7–R8 | direção do R3 + **frase que ocupa os 5 s** | fala só o texto pedido: "Ih, rapaz... escolheu o lanchinho errado, hein? Fica pra próxima!" |
+
+**Aprovado pelo responsável: R8 ("muito bom")** — 5 s, 480×832, 70 s para gerar, 276 Hz de mediana, Texugo de corpo inteiro com as mãos na cintura. O Whisper ouviu "E rapaz" no lugar de "Ih, rapaz".
+
+**Regras aprendidas:**
+- Para voz de personagem, usar **áudio de referência**, não descrição.
+- O `ref2va` exige **no mínimo 5 s** (124 quadros); a **fala precisa ocupar o clipe inteiro**, senão o modelo inventa palavras ou copia o texto da referência.
+- Pedir "copie o timbre, mas fale devagar e articulando" separou o timbre da dicção ruim da referência.
+
+Receita e arquivos aprovados (fora do Git): `/home/pases/Texugo Bolado/voz-texugo/` (referência, prompt, vídeo aprovado e LEIA-ME).
+
 ### Limites e cuidados
 - **RAM:** 50–52 GiB de 59; o ComfyUI com o H3 **não convive com o Ollama nem com outros serviços pesados**.
 - Uma semente por teste, miniaturas, 480×832 na maioria; a 768p só um teste.
-- Não testados: `ref2va` (vídeo de referência), ControlNet, clipes de 15 s, resolução oficial em clipes longos, o 2K.
+- Não testados: `ref2va` com **vídeo** de referência, ControlNet, clipes de 15 s, resolução oficial em clipes longos, o 2K.
 - Os arquivos dos testes ficam em `/scratch/comfyui/output/video/` (`h3_teste*`), fora do Git.
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
