@@ -968,7 +968,12 @@ Roteiro de 7 planos (16,5 s), com a regra de **esconder o contato** por corte e 
 | 736×1312, semente 21 | 27,6 min | **descartada**: duas cabeças de leoa no close (o **mesmo defeito** da versão 2) e uma fala solta no início |
 | **736×1312, semente 7** | **27,3 min** | **escolhida**: uma leoa só, enredo inteiro, fala só no fim |
 
-**Limites:** o "troco" saiu como **um tapa com a pata no nariz**, não uma mordida; um quadro de transição com fantasma no início da captura. **Avaliação do responsável pendente.**
+**Limites:** o "troco" saiu como **um tapa com a pata no nariz**, não uma mordida; um quadro de transição com fantasma no início da captura.
+
+**Avaliação do responsável (17/10/2026):** concorda com os dois limites e conclui: **"sempre que precisa ter uma interação entre personagens, não fica satisfatório"**.
+
+!!! warning "Lição consolidada: contato entre personagens"
+    Em todas as tentativas (LTX montado, LTX primeiro/último quadro, Animate-2 e H3 em geração única), **o contato físico entre dois personagens** (morder, agarrar, carregar) saiu insatisfatório: vira tapa, agarrão, fantasma ou cabeça duplicada. Planos de **um personagem** e de **dois personagens sem contato** funcionam. Até haver uma técnica que controle o contato, os roteiros devem **contar a interação por reação, corte e som**, não por contato em tela.
 
 **Padrão observado:** nas duas versões, a **semente 21 a 736×1312 duplicou a cabeça da leoa** no close e a **semente 7** ficou limpa. Com 2 casos não dá para generalizar; por ora, renderizar a final com mais de uma semente candidata e conferir o close antes de entregar.
 
