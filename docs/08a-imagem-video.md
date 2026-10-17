@@ -1014,7 +1014,17 @@ O responsável identificou **os mesmos problemas** que o assistente na v5 (as le
 | 736×1312, semente 11 | descartada: **fala inventada aos 5 s** e fumaça saindo do nariz do Texugo |
 | **736×1312, semente 7** (27,3 min) | **entregue**: investida e fuga legíveis, fala limpa no fim |
 
-**A correção funcionou:** fixar o ponto de vista da câmera no prompt resolveu quem ataca e quem foge, nas quatro tomadas. **Limites:** o número de leoas não obedece (4 a 6, não 3); manchas azuladas em alguns quadros do plano de cima; o Whisper ouviu "com um texugo errado". **Avaliação do responsável pendente.**
+**A correção funcionou:** fixar o ponto de vista da câmera no prompt resolveu quem ataca e quem foge, nas quatro tomadas. **Limites:** o número de leoas não obedece (4 a 6, não 3); manchas azuladas em alguns quadros do plano de cima; o Whisper ouviu "com um texugo errado".
+
+**Avaliação do responsável (17/10/2026): "ficou bom, talvez o melhor até agora"**; observou os mesmos limites que o assistente.
+
+!!! tip "Receita que funcionou para episódios do Texugo (consolidada da v5.1)"
+    1. **H3 `ref2va`, uma geração de 15 s** com cortes descritos no prompt e três referências: o Texugo, o outro personagem e a voz aprovada.
+    2. **Sem contato físico em tela**; o conflito se resolve por atitude, reação e fuga.
+    3. **Fixar o ponto de vista da câmera** em perseguições e fugas (quem ataca de costas para a câmera; quem foge, correndo para longe).
+    4. **Fala de ~4 s só no último corte**, ocupando o tempo; "NO dialogue before" no prompt.
+    5. **Escolher a semente em 480×832** (~6 min) e **renderizar a final em 736×1312** (~27 min) com duas sementes candidatas; conferir o close e a fala (Whisper) antes de entregar.
+    6. Limites conhecidos: o número de personagens repetidos não obedece; manchas e falas inventadas aparecem em algumas sementes.
 
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
