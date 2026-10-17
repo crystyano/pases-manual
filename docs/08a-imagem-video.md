@@ -1003,6 +1003,19 @@ Enredo proposto pelo responsável depois da v4: **as leoas cercam o Texugo e, an
 
 **Problema principal, visto pelo assistente antes da entrega:** na investida o Texugo corre **em direção à câmera** com as leoas **correndo atrás dele, no mesmo sentido**; a cena se lê como **elas perseguindo ele**, o contrário do roteiro, e a fuga delas quase não aparece. No cerco, duas leoas sobrepostas parecem uma cabeça dupla. **Lição:** em perseguição e fuga, **a direção da câmera define quem foge**; o prompt precisa fixar o ponto de vista (câmera atrás de quem ataca; quem foge correndo **para longe** da câmera). **Avaliação do responsável pendente.**
 
+### Versão 5.1: ponto de vista da câmera corrigido <span class="badge badge-existe">Existe — 17/10/2026</span>
+
+O responsável identificou **os mesmos problemas** que o assistente na v5 (as leoas parecendo perseguir o Texugo; a cabeça dupla). Correção só no prompt: **três leoas bem espaçadas**; na investida, **câmera atrás do Texugo**, ele corre para longe da câmera em direção às leoas, que o encaram; na fuga, ele fica de costas no primeiro plano e elas correm **para longe da câmera**. Arquivo: `troco-do-texugo-h3/final/Texugo_Bolado_Mexeram_com_o_Texugo_Errado_H3_v5_1.mp4` (15 s, 736×1312).
+
+| Tomada | Resultado (leitura do assistente) |
+|---|---|
+| 480×832, sementes 7 e 11 | **direção correta** nas duas; fala limpa só no fim |
+| 480×832, semente 3 | descartada: manchas azuis no plano de cima e nas costas do Texugo |
+| 736×1312, semente 11 | descartada: **fala inventada aos 5 s** e fumaça saindo do nariz do Texugo |
+| **736×1312, semente 7** (27,3 min) | **entregue**: investida e fuga legíveis, fala limpa no fim |
+
+**A correção funcionou:** fixar o ponto de vista da câmera no prompt resolveu quem ataca e quem foge, nas quatro tomadas. **Limites:** o número de leoas não obedece (4 a 6, não 3); manchas azuladas em alguns quadros do plano de cima; o Whisper ouviu "com um texugo errado". **Avaliação do responsável pendente.**
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
