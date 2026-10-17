@@ -977,6 +977,19 @@ Roteiro de 7 planos (16,5 s), com a regra de **esconder o contato** por corte e 
 
 **Padrão observado:** nas duas versões, a **semente 21 a 736×1312 duplicou a cabeça da leoa** no close e a **semente 7** ficou limpa. Com 2 casos não dá para generalizar; por ora, renderizar a final com mais de uma semente candidata e conferir o close antes de entregar.
 
+### Versão 4: a mordida contada sem contato em tela <span class="badge badge-existe">Existe — 17/10/2026</span>
+
+Aplicação direta da lição acima: **os dois nunca se tocam em tela**; a mordida é contada por **reação, corte e som**. Mesma técnica (geração única de 15 s, 6 cortes, referências de personagens e voz). Roteiro: o Texugo come mel tranquilo e a leoa espreita ao fundo · a leoa, **sozinha no quadro**, salta rugindo · **close só no Texugo**: ele vira a cabeça para fora do quadro, ouve-se um "nhac" e um ganido, ele volta mastigando · a leoa, **sozinha**, foge com o nariz vermelho · ele tira um tufo de pelo dos dentes · "Ih, rapaz... cada um com seu lanchinho, hein? Fica pra próxima!". Arquivos: `troco-do-texugo-h3/final/Texugo_Bolado_O_Troco_do_Texugo_H3_v4.mp4` (principal) e `..._v4_alternativa.mp4`.
+
+| Tomada | Tempo | Resultado (leitura do assistente) |
+|---|---|---|
+| 480×832, sementes 7 e 21 | ~6 min cada | sem contato em tela; fala limpa só no fim |
+| 480×832, semente 3 | ~6 min | descartada: a leoa salta em pé como gente; som solto antes da fala |
+| **736×1312, semente 7** | 27,3 min | **principal**: no close, o "nhac" com um tufo bege entrando no quadro; duas transições em fusão entre cortes |
+| 736×1312, semente 21 | 27,6 min | alternativa: **sem cabeça duplicada desta vez** (sem contato, o defeito não apareceu); mordida menos clara |
+
+**Avaliação do responsável pendente.**
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
