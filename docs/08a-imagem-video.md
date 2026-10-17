@@ -957,6 +957,21 @@ Roteiro de 7 planos (16,5 s), com a regra de **esconder o contato** por corte e 
 
 **Lições:** uma geração de 15 s com cortes no prompt resolve continuidade de personagens, som e voz melhor que montar planos; **a resolução maior não garante resultado melhor** (a semente 21 piorou a 736×1312), então vale escolher a semente a 480×832 (~6 min) e só então renderizar na resolução final, aceitando que o resultado muda.
 
+### Versão 3: novo enredo, "cada um com seu lanchinho" <span class="badge badge-existe">Existe — 17/10/2026</span>
+
+**Motivo:** a versão 2 teve qualidade e voz aprovadas, mas "o enredo não tem muito sentido". **Enredo novo** (mesma técnica: uma geração de 15 s do `ref2va` com 6 cortes e as mesmas três referências): o Texugo come um favo de mel tranquilo; a leoa ataca e ele **nem se abala** (boceja); ela o carrega pela nuca e ele segue lambendo o mel; ele dá um "troco" no nariz dela sem nem olhar; ela foge envergonhada; ele cai sentado com o favo intacto e diz "Ih, rapaz... cada um com seu lanchinho, hein? Fica pra próxima!". O humor vem da **calma do malandro** e o mel liga a fala ao começo. Arquivo: `troco-do-texugo-h3/final/Texugo_Bolado_O_Troco_do_Texugo_H3_v3.mp4` (15 s, 736×1312).
+
+| Tomada | Tempo | Resultado (leitura do assistente) |
+|---|---|---|
+| 480×832, sementes 7 e 21 | ~6 min cada | seguem o enredo; fala limpa só no fim |
+| 480×832, semente 3 | ~6 min | descartada: brilho verde-amarelado no Texugo |
+| 736×1312, semente 21 | 27,6 min | **descartada**: duas cabeças de leoa no close (o **mesmo defeito** da versão 2) e uma fala solta no início |
+| **736×1312, semente 7** | **27,3 min** | **escolhida**: uma leoa só, enredo inteiro, fala só no fim |
+
+**Limites:** o "troco" saiu como **um tapa com a pata no nariz**, não uma mordida; um quadro de transição com fantasma no início da captura. **Avaliação do responsável pendente.**
+
+**Padrão observado:** nas duas versões, a **semente 21 a 736×1312 duplicou a cabeça da leoa** no close e a **semente 7** ficou limpa. Com 2 casos não dá para generalizar; por ora, renderizar a final com mais de uma semente candidata e conferir o close antes de entregar.
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
