@@ -990,6 +990,19 @@ Aplicação direta da lição acima: **os dois nunca se tocam em tela**; a mordi
 
 **Avaliação do responsável (17/10/2026):** **nenhuma das duas tomadas ficou boa**: "visualmente está muito bonito, mas a mordida está estranha; não atingiu o objetivo". Contar a mordida por reação e som **também não resolveu**: o gesto de morder em close, mesmo sem contato, sai estranho. Conclusão do conjunto (versões 1 a 4): com as ferramentas locais atuais, **a mordida em si não sai convincente**, com ou sem contato; a qualidade visual e a voz, sim.
 
+### Versão 5: "Mexeram com o texugo errado" (ideia do responsável) <span class="badge badge-existe">Existe — 17/10/2026</span>
+
+Enredo proposto pelo responsável depois da v4: **as leoas cercam o Texugo e, antes que ataquem, ele é quem vai para cima; elas não esperavam e fogem**. Sem mordida e sem contato. Mesma técnica; fala final: "Ih, rapaz... mexeram com o texugo errado, hein? Fica pra próxima!". Arquivo: `troco-do-texugo-h3/final/Texugo_Bolado_Mexeram_com_o_Texugo_Errado_H3_v5.mp4` (15 s, 736×1312).
+
+| Tomada | Resultado (leitura do assistente) |
+|---|---|
+| 480×832, semente 7 | limpa; fala só no fim |
+| 480×832, semente 21 | descartada: leoas com cabeça duplicada no cerco; fala solta no meio |
+| 480×832, semente 3 | descartada: fala antecipada; mancha rosa no céu |
+| **736×1312, semente 7** (27,6 min) | entregue: cerco, o Texugo estalando o pescoço e a fala final bons |
+
+**Problema principal, visto pelo assistente antes da entrega:** na investida o Texugo corre **em direção à câmera** com as leoas **correndo atrás dele, no mesmo sentido**; a cena se lê como **elas perseguindo ele**, o contrário do roteiro, e a fuga delas quase não aparece. No cerco, duas leoas sobrepostas parecem uma cabeça dupla. **Lição:** em perseguição e fuga, **a direção da câmera define quem foge**; o prompt precisa fixar o ponto de vista (câmera atrás de quem ataca; quem foge correndo **para longe** da câmera). **Avaliação do responsável pendente.**
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
