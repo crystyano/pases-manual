@@ -937,6 +937,24 @@ Roteiro de 7 planos (16,5 s), com a regra de **esconder o contato** por corte e 
 - O medidor de nitidez acusa 24 quedas no vídeo inteiro, mas **confunde cortes de plano com quedas**.
 - Um vídeo, uma montagem; 5 de 8 planos já tinham os defeitos registrados no v3.
 
+### Versão 2: refeita com o MiniMax H3 e a voz aprovada <span class="badge badge-existe">Existe — 17/10/2026</span>
+
+**Pedido:** refazer a cena com o H3 e a voz aprovada (seção 8A.14). Arquivos em `/home/pases/Texugo Bolado/video/local-pc/troco-do-texugo-h3/` (fora do Git; LEIA-ME próprio): `final/Texugo_Bolado_O_Troco_do_Texugo_H3_v1.mp4` (**15 s, 736×1312, 24 fps, áudio estéreo**).
+
+**Técnica:** em vez de montar planos, a cena inteira saiu de **uma única geração** do `ref2va`, com **6 cortes descritos no prompt** (como o modelo de fluxo oficial faz) e três referências: o Texugo (`<Picture 1>`), a leoa (`<Picture 2>`) e a voz aprovada (`<Audio 1>`). A fala final: "Ih, rapaz... escolheu o lanchinho errado, hein? Fica pra próxima!"
+
+| Tomada | Tempo | Resultado (leitura do assistente) |
+|---|---|---|
+| 480×832, sementes 7 e 21 | 370 s e 356 s | seguem os 6 cortes; fala limpa a partir de ~10 s |
+| 736×1312, semente 21 | **1655 s** | **descartada**: duas cabeças de leoa no close; o Whisper ouviu possível fala inventada no início |
+| **736×1312, semente 7** | **1640 s** | **escolhida**: 6 cortes, uma leoa só, mordida clara (a boca do Texugo no focinho, os olhos dela arregalados), fala só a partir de 9,8 s |
+
+**Comparado com a versão 1 (LTX, 22 s, 8 planos montados):** a mordida aparece de forma mais clara, a voz é a aprovada e a cena não tem emendas; em troca, a 736×1312 custa **~27 min por tomada** e **~52 GiB de RAM**, e o vídeo fica sob a **licença restrita do H3**.
+
+**Limites:** na captura o Texugo fica pequeno e com o peito mais branco por instantes; há um quadro de transição em que ele vira um borrão; o Whisper ouviu "E rapaz" no lugar de "Ih, rapaz". **Avaliação do responsável pendente.**
+
+**Lições:** uma geração de 15 s com cortes no prompt resolve continuidade de personagens, som e voz melhor que montar planos; **a resolução maior não garante resultado melhor** (a semente 21 piorou a 736×1312), então vale escolher a semente a 480×832 (~6 min) e só então renderizar na resolução final, aceitando que o resultado muda.
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
