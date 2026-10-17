@@ -988,7 +988,7 @@ Aplicação direta da lição acima: **os dois nunca se tocam em tela**; a mordi
 | **736×1312, semente 7** | 27,3 min | **principal**: no close, o "nhac" com um tufo bege entrando no quadro; duas transições em fusão entre cortes |
 | 736×1312, semente 21 | 27,6 min | alternativa: **sem cabeça duplicada desta vez** (sem contato, o defeito não apareceu); mordida menos clara |
 
-**Avaliação do responsável pendente.**
+**Avaliação do responsável (17/10/2026):** **nenhuma das duas tomadas ficou boa**: "visualmente está muito bonito, mas a mordida está estranha; não atingiu o objetivo". Contar a mordida por reação e som **também não resolveu**: o gesto de morder em close, mesmo sem contato, sai estranho. Conclusão do conjunto (versões 1 a 4): com as ferramentas locais atuais, **a mordida em si não sai convincente**, com ou sem contato; a qualidade visual e a voz, sim.
 
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
