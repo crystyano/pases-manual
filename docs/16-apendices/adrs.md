@@ -311,6 +311,9 @@ O 2512 (Apache 2.0) foi baixado (30,07 GB, SHA-256 conferido) e testado no item 
 
 ---
 
+### Atualização (2026-10-18) — mantido por decisão do responsável
+Na revisão do inventário de modelos, o Qwen-Image 2.1 foi apontado como **dispensável para o negócio** (licença não comercial; ~16 GiB com o codificador `qwen3vl_8b`), embora siga sem substituto para texto em português dentro de imagens. **Decisão do responsável: manter por enquanto.** Continua valendo a regra deste ADR: não usar nos conteúdos da marca.
+
 ## ADR-010 — FLUX.2 klein 4B para edição de imagens, com VAE do repositório Apache {#adr-010}
 
 **Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-09
