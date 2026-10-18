@@ -348,6 +348,28 @@ Fora do benchmark, o `qwen38-cline` (pelo proxy sem raciocínio, ADR-013) recebe
 
 **O que isso mostra do modelo:** ele entrega em ~4 minutos um jogo grande, **sem erro de sintaxe e quase completo**, mas com defeitos de lógica e renderização que só aparecem executando; corrigiu 2 de 3 problemas **depois de receber a causa**. Reforça a regra da seção anterior: **testar o resultado**, e não confiar só em "carrega sem erro".
 
+### Itens de visão (3 e 4): Qwen3.8-27B contra Qwen3-VL 8B <span class="badge badge-existe">Existe — 18/10/2026</span>
+
+Pergunta do responsável: o Qwen3-VL 8B ainda faz sentido, já que o Qwen3.8 tem visão nativa? Teste com **fixtures sintéticas de visão** geradas por `gerar_visao.py` (gabarito conhecido, correção automática por `visao.py`; resultados em `results/2026-10-18_0030_visao/` (1ª rodada) e `results/2026-10-18_0038_visao/` (Qwen3-VL refeito)), 3 repetições, `temperature 0.2`, `think=false`, mesmas imagens e perguntas:
+
+| Tarefa | O que mede | Qwen3.8-27B | Qwen3-VL 8B |
+|---|---|---|---|
+| **Item 4 — nota fiscal** (inclinada, com ruído e JPEG) | 8 campos (emitente, CNPJ, data, número, 3 totais, total) | **100%** | 92% |
+| **Item 3 — armário** (portas somam 1900 em 1800) | achar o erro de cota | **100%** | **100%** |
+| **Item 3 — controle** (desenho correto) | não dar falso alarme | **100%** | 67% |
+| **Item 3 — gaveteiro** (gaveta 600 em móvel de 550) | achar o erro de cota | **100%** | **100%** |
+| Gráfico de barras | mês maior e dois valores | **100%** | **100%** |
+| Contagem de formas (7, 4 e 2) | três contagens | **100%** | 67% |
+| Transcrição de texto com acentos | similaridade | **100%** | **100%** |
+| Cena (o Texugo na savana) | animal, quantidade, cenário, postura | 75% (**errou o animal**: "tatu-bola", "morcego") | **83%** ("honey badger"/"badger") |
+| **Média** | | **96,9%** | **88,5%** |
+| Tempo mediano por resposta | | **1,2 s** | 9,1 s (até 84 s) |
+| VRAM | | 9,6 + 11,7 GiB (as duas GPUs) | 9,6 GiB (só a 5060 Ti) |
+
+**Um cuidado de método:** o **Qwen3-VL ignora `think=false`** e raciocina 800 a 1.500 tokens antes de responder. Na primeira rodada, com limite de 1.500 tokens, várias respostas saíram vazias (média de 68,8%, **injusta com ele**); a tabela traz a **segunda rodada, com limite de 6.000 tokens**. Mesmo assim, 2 das 24 respostas se perderam em raciocínio sem fim (84 s).
+
+**Leitura:** o Qwen3.8 é **melhor e ~8× mais rápido** em quase tudo, inclusive nos itens 3 e 4 do PASES-Bench; o Qwen3-VL só ganhou ao **reconhecer o texugo** na cena. Pela vantagem de tamanho (6,1 GB, uma GPU só), ele também não convive com o ComfyUI, que usa a mesma 5060 Ti. **Limites:** fixtures sintéticas escritas pelo assistente, 8 tarefas, 3 repetições; as fixtures oficiais (Promob real, nota escaneada real) continuam inexistentes.
+
 ### O que isso significa
 - Como **agente** (o uso com o Cline) o modelo foi muito bem; como **refatorador**, teve resultado **desigual**: na fixture de pedido introduziu um erro que derruba tudo e o repetiu **8 de 8** vezes; em outras duas fixtures se saiu bem, mas com erros **silenciosos nos limites** (ver a seção anterior). Uma falha repetível pesa mais que uma ocasional.
 - A troca do Devstral pelo Qwen3-Coder ([ADR-012](16-apendices/adrs.md#adr-012)) **permanece** (decisão do responsável), mas com um dado: o Qwen3-Coder **reprova no critério de precisão em código** deste benchmark. **O Devstral nunca foi executado nesta suíte** (o responsável não quer mais usá-lo); a comparação foi feita com o Qwen3.8 (seção abaixo).
@@ -363,6 +385,7 @@ Fora do benchmark, o `qwen38-cline` (pelo proxy sem raciocínio, ADR-013) recebe
 ```bash
 cd /srv/pases/llm-bench && ./bench_llm.py --validar && ./bench_llm.py --modelo qwen-cline --reps 3
 ./bench_llm.py --modelo qwen-cline --reps 5 --refatoracao   # só o item 2, nas 3 fixtures de refatoração
+python3 gerar_visao.py && python3 visao.py --modelos qwen3.8:27b --reps 3   # itens de visão; o qwen3-vl:8b precisa de --num-predict 6000
 BENCH_THINK=off ./bench_llm.py --modelo qwen38-bench --reps 3   # modelos com raciocínio: força desligado (on = ligado; sem a variável, o padrão do modelo)
 ```
 O ComfyUI precisa estar parado (VRAM livre) e `ollama ps` vazio.
@@ -370,7 +393,7 @@ O ComfyUI precisa estar parado (VRAM livre) e `ollama ps` vazio.
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
 - Instalação do Ollama e benchmark real de cada modelo na estação (tok/s medidos)
-- Rodar o PASES-Bench com as **fixtures oficiais** (Moventus, Promob, nota fiscal) e os itens de **visão** no `qwen3-vl:8b`
+- Rodar o PASES-Bench com as **fixtures oficiais** (Moventus, Promob, nota fiscal); os itens de visão já rodaram com fixtures sintéticas (seção 8.9)
 - Papel do Claude no fluxo de trabalho ([ADR-003](16-apendices/adrs.md#adr-003))
 - AI Gateway ([ADR-004](16-apendices/adrs.md#adr-004)) — ferramenta e configuração
 - Cache de respostas e controle de custo
