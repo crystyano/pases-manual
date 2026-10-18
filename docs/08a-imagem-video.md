@@ -1028,6 +1028,21 @@ O responsável identificou **os mesmos problemas** que o assistente na v5 (as le
     4. **Fala de ~4 s só no último corte**, ocupando o tempo; "NO dialogue before" no prompt.
     5. **Escolher a semente em 480×832** (~6 min) e **renderizar a final em 736×1312** (~27 min) com duas sementes candidatas; conferir o close e a fala (Whisper) antes de entregar.
     6. Limites conhecidos: o número de personagens repetidos não obedece; manchas e falas inventadas aparecem em algumas sementes.
+    7. Fala inventada num trecho sem diálogo, com imagem boa: **trocar só o áudio daquele trecho** pelo de outra tomada do mesmo plano e conferir com o Whisper (v6).
+
+### Versão 6: "Mel aqui tem dono" (primeira feita com a receita) <span class="badge badge-existe">Existe — 18/10/2026</span>
+
+Primeiro episódio feito **direto pela receita** acima, com enredo novo: o Texugo saqueia uma colmeia sem ligar para as abelhas; a leoa (sozinha no quadro) espia, rouba o favo deixado numa pedra e o **enxame cai nela**; com a câmera atrás do Texugo, ela foge ao longe; ele pega o favo caído: "Ih, rapaz... mel aqui tem dono, hein? Fica pra próxima!". Arquivo: `troco-do-texugo-h3/final/Texugo_Bolado_Mel_Aqui_Tem_Dono_H3_v6.mp4` (15 s, 736×1312).
+
+| Tomada | Resultado (leitura do assistente) |
+|---|---|
+| 480×832, semente 7 | a mais limpa nas prévias |
+| 480×832, semente 11 | enxame mais bonito; **fala inventada** no início |
+| 480×832, semente 3 | descartada: fala inventada; o enxame parece uma juba na leoa |
+| 736×1312, semente 7 | **descartada**: **dois Texugos** no plano da colmeia e mancha roxa no favo final |
+| **736×1312, semente 11** | **entregue**, com o **áudio de 0 a 4 s trocado** pelo da semente 7 (mesmo plano, só zumbido) |
+
+**Ajuste novo de pós-produção:** quando a imagem é boa mas o modelo inventa uma fala num trecho sem diálogo, **trocar só o áudio daquele trecho** pelo de outra tomada do mesmo plano (ffmpeg, crossfade de 0,2 s) e conferir com o Whisper. **Lição reforçada:** a melhor prévia em 480p **piorou** na resolução final (Texugo duplicado), e a segunda melhorou; renderizar duas candidatas segue necessário. **Avaliação do responsável pendente.**
 
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
