@@ -176,7 +176,7 @@ ollama run qwen-cline
 ollama run qwen-cline "sua pergunta aqui"
 
 # Visão — o caminho da imagem vai DENTRO da frase (evitar espaços no nome do arquivo)
-ollama run qwen3-vl:8b "Descreva esta imagem: /tmp/tela.png"
+ollama run qwen3.8:27b "Descreva esta imagem: /tmp/tela.png"   # visão: o qwen3-vl:8b foi removido em 18/10/2026
 
 # Ver o que está carregado na VRAM agora
 ollama ps
@@ -193,7 +193,7 @@ cd /srv/pases/core && docker compose up -d          # ressuscita PostgreSQL e Re
 
 Levantado na própria máquina (`ollama list`, arquivos do ComfyUI, `docker ps`, `ss`), não por memória. **Sempre que o inventário e outro texto do manual divergirem, vale este.**
 
-### LLMs locais (Ollama, `/dados/modelos/ollama`, 40 GB)
+### LLMs locais (Ollama, `/dados/modelos/ollama`, 34 GB)
 
 | Modelo | Tamanho | Papel | Observação |
 |---|---|---|---|
@@ -202,7 +202,7 @@ Levantado na própria máquina (`ollama list`, arquivos do ComfyUI, `docker ps`,
 | `qwen38-bench` | 17 GB (mesmo arquivo) | Execução do PASES-Bench | `num_ctx 32768`, `temperature 0.7`, `top_k 20`, `top_p 0.8`, os mesmos do `qwen-cline`; usado com o raciocínio desligado |
 | `qwen3-coder:30b` | 18 GB | Código e agentes, modelo rápido | Qwen3-Coder 30B-A3B, Q4_K_M, contexto de 256k, com ferramentas ([ADR-012](16-apendices/adrs.md#adr-012)) |
 | `qwen-cline` | 18 GB (mesmo arquivo) | Código com o Cline | `num_ctx 32768`; velocidade na seção 8.3; precisão na seção 8.9 |
-| `qwen3-vl:8b` | 6,1 GB | Visão e OCR | Benchmark de julho na seção 8.3 |
+| *`qwen3-vl:8b`* | — | — | **Removido em 18/10/2026** (pelo responsável): redundante; o Qwen3.8-27B foi melhor e ~8× mais rápido nos itens de visão (seção 8.9). Para reinstalar: `ollama pull qwen3-vl:8b` |
 | *Devstral Small 2 24B* | — | — | **Removido** (resultados insatisfatórios, informado pelo responsável) |
 
 ### Imagem, vídeo e 3D (ComfyUI e Blender)
@@ -368,7 +368,7 @@ Pergunta do responsável: o Qwen3-VL 8B ainda faz sentido, já que o Qwen3.8 tem
 
 **Um cuidado de método:** o **Qwen3-VL ignora `think=false`** e raciocina 800 a 1.500 tokens antes de responder. Na primeira rodada, com limite de 1.500 tokens, várias respostas saíram vazias (média de 68,8%, **injusta com ele**); a tabela traz a **segunda rodada, com limite de 6.000 tokens**. Mesmo assim, 2 das 24 respostas se perderam em raciocínio sem fim (84 s).
 
-**Leitura:** o Qwen3.8 é **melhor e ~8× mais rápido** em quase tudo, inclusive nos itens 3 e 4 do PASES-Bench; o Qwen3-VL só ganhou ao **reconhecer o texugo** na cena. Pela vantagem de tamanho (6,1 GB, uma GPU só), ele também não convive com o ComfyUI, que usa a mesma 5060 Ti. **Limites:** fixtures sintéticas escritas pelo assistente, 8 tarefas, 3 repetições; as fixtures oficiais (Promob real, nota escaneada real) continuam inexistentes.
+**Leitura:** o Qwen3.8 é **melhor e ~8× mais rápido** em quase tudo, inclusive nos itens 3 e 4 do PASES-Bench; o Qwen3-VL só ganhou ao **reconhecer o texugo** na cena. Apesar do tamanho menor (6,1 GB, uma GPU só), ele também não convive com o ComfyUI, que usa a mesma 5060 Ti. **Decisão do responsável: removido em 18/10/2026** (`ollama rm qwen3-vl:8b`, executado por ele). **Limites:** fixtures sintéticas escritas pelo assistente, 8 tarefas, 3 repetições; as fixtures oficiais (Promob real, nota escaneada real) continuam inexistentes.
 
 ### O que isso significa
 - Como **agente** (o uso com o Cline) o modelo foi muito bem; como **refatorador**, teve resultado **desigual**: na fixture de pedido introduziu um erro que derruba tudo e o repetiu **8 de 8** vezes; em outras duas fixtures se saiu bem, mas com erros **silenciosos nos limites** (ver a seção anterior). Uma falha repetível pesa mais que uma ocasional.
