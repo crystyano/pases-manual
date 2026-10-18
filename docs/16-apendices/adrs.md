@@ -213,6 +213,9 @@ Os modelos ficam em `/dados/modelos/comfyui/` e a saída em `/scratch/comfyui/ou
 
 ---
 
+### Atualização (2026-10-18) — Wan 2.2 5B removido
+O Wan 2.2 TI2V-5B foi removido por decisão do responsável (obsoleto diante do LTX 2.5 e do MiniMax H3; arquivos na lixeira). O ComfyUI e o Z-Image-Turbo seguem válidos ([Cap. 8A.3](../08a-imagem-video.md)).
+
 ## ADR-008 — LTX 2.5 como modelo de vídeo principal {#adr-008}
 
 **Status:** Aceito <span class="badge badge-existe">Em uso</span> · **Data:** 2026-10-08 · **Substitui parcialmente:** [ADR-007](#adr-007) (apenas a escolha do Wan 2.2 5B como modelo de vídeo)
