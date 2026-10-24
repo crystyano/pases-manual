@@ -1044,6 +1044,16 @@ Primeiro episódio feito **direto pela receita** acima, com enredo novo: o Texug
 
 **Ajuste novo de pós-produção:** quando a imagem é boa mas o modelo inventa uma fala num trecho sem diálogo, **trocar só o áudio daquele trecho** pelo de outra tomada do mesmo plano (ffmpeg, crossfade de 0,2 s) e conferir com o Whisper. **Lição reforçada:** a melhor prévia em 480p **piorou** na resolução final (Texugo duplicado), e a segunda melhorou; renderizar duas candidatas segue necessário. **Avaliação do responsável pendente.**
 
+### Aventuras em quadrinhos e vídeo <span class="badge badge-existe">Existe — 21/10/2026</span>
+
+Pedido do responsável: duas histórias divertidas que mostrem que o Texugo **não tem medo de nada**, em quadrinhos e em vídeo. Pasta `/home/pases/Texugo Bolado/hq-aventuras/` (fora do Git; LEIA-ME próprio).
+
+- **Quadrinhos:** cada quadro gerado no **FLUX.2 klein 4B** (Apache 2.0) com o Texugo como referência (4 candidatas por quadro, escolhida a melhor; o elefante ganhou referência própria). Balões, legendas e onomatopeias desenhados por script (`scripts/montar_hq.py`): página vertical e carrossel 1080×1080 para Instagram. Quadros com personagens "fundidos" foram refeitos com composição separada.
+- **Vídeos:** a receita deste capítulo (H3 `ref2va`, 15 s, 6 cortes, voz aprovada, sem contato).
+- **"O Texugo e a Tempestade" foi descartado** pelo responsável: ele é caricato e destemido, mas **não deve parecer mais poderoso que forças da natureza / Deus**. Guardado em `descartado-tempestade/`.
+- **"Quem Dá Passagem?" (elefante) foi refeito (v2)** depois da avaliação do responsável ("tem inconsistências"). A revisão quadro a quadro mostrou: o Texugo mudava de corpo (panda de frente, gambá de costas, magro de lado), o bocejo parecia grito de medo, pássaros-fantasma, freada que não aparecia, recuo ambíguo e fala fora do último corte. Correção: **quatro vistas do Texugo como referência** (`frente.jpg`, `direito.jpg`, `esquerdo.jpg`, `traseiro.jpg`), o bocejo virou **sentar e coçar a orelha**, freada como cena própria, o elefante **dá meia-volta**, fala só no fim. Uma prévia inventou **letreiros falsos na imagem**. Final: `videos/final/Texugo_Bolado_Quem_Da_Passagem_v2.mp4`.
+- **Lições novas:** usar **todas as vistas do personagem** como referência (o modelo inventa as costas se só vê a frente); conferir também **texto inventado na imagem**; o personagem não "vence" forças da natureza.
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
@@ -1112,6 +1122,38 @@ Receita e arquivos aprovados (fora do Git): `/home/pases/Texugo Bolado/voz-texug
 - Uma semente por teste, miniaturas, 480×832 na maioria; a 768p só um teste.
 - Não testados: `ref2va` com **vídeo** de referência, ControlNet, clipes de 15 s, resolução oficial em clipes longos, o 2K.
 - Os arquivos dos testes ficam em `/scratch/comfyui/output/video/` (`h3_teste*`), fora do Git.
+
+## 8A.15 Vídeos de treinamento do Ardus e vozes de narração <span class="badge badge-existe">Existe — 23/10/2026</span>
+
+Três vídeos de treinamento do **Ardus** (programa de projeto de móveis) montados a partir de pacotes de material gravado pelo próprio Ardus (vídeos e fotos da tela, `roteiro.json`, narração e grafia para voz). Saída em `/home/pases/Treinamento-video/` (fora do Git); ferramentas em `/srv/pases/comfyui-config/treinamento/`.
+
+| Vídeo | Material | Duração (1,25×) | Situação |
+|---|---|---|---|
+| Treinamento completo (v4) — cozinha do zero, abertura + 17 capítulos | `Treinamento-v3` | 21 min 36 s | **aprovado** ("ficou muito bom"; pedido de 1,25×) |
+| "A aba Propriedades em detalhe" — abertura + 12 capítulos | `Treinamento-Propriedades` | 12 min 47 s | entregue |
+| "Os menus em resumo" — abertura + 14 capítulos | `Treinamento-Menus` | 13 min 32 s | **aprovado** ("ficou bom") |
+
+### Montagem (só ffmpeg e Pillow, sem IA de vídeo)
+- **Cenas fiéis:** a tela real, sem nada inventado; vídeo em velocidade normal com o último quadro congelado se a fala for mais longa; **fotos paradas**, e quando o roteiro pede foco, **corte direto** para o detalhe ampliado (o zoom lento foi reprovado: "parece baixo FPS").
+- **Identidade:** cartão de abertura com o **logo oficial** (versão em alta resolução enviada pelo responsável; a do pacote tem só 460×132); cartões de capítulo com o número laranja crescendo, título deslizando, linha se desenhando e o logo pequeno, sobre o giro da cozinha desfocado e tingido de `#07515B`; `naTela` deslizando no canto com detalhe laranja (some aos 3 s); barra de progresso; fusões de 0,3 s.
+- **Abertura de treinamento, não de venda:** a abertura de venda dos pacotes ("Imagine mostrar ao seu cliente...") foi **reprovada** pelo responsável; os pacotes de Propriedades e Menus já trazem abertura de treinamento e ela foi usada.
+- **Legendas** a partir de `narracao`, no tempo real de cada frase gerada, em blocos de até 2 linhas.
+- **1,25×** em tudo (imagem e voz; `atempo` mantém o tom), pedido do responsável depois de testar num player; versão normal guardada em `velocidade-1.0/` (`acelerar.py`).
+
+### A voz: o que foi testado (resumo)
+| Motor | Licença | Resultado |
+|---|---|---|
+| Kokoro `pm_alex` (v1) | Apache 2.0 | voz aprovada como "convincente", mas pronúncia errada ("Ardús", "claique") mesmo com correção por **fonemas** (trocar a saída do g2p: `aɾədˈus`→`ˈaːɾdʊs` e a forma `aɾədˈuz`, que faltava; o ataque glotal `ʔ` gerou "Chárdus") |
+| Piper pt-BR (`cadu`, `jeff`, `faber`) | MIT / dados CC0 | nativo, mas **engole o R** ("amário", "fente"); reprovado |
+| Qwen3-TTS 1.7B (voz pronta e **VoiceDesign**) | Apache 2.0 | a voz criada por descrição ("masculina brasileira nativa, ~40 anos, sotaque paulista neutro, instrutor calmo") virou a **voz de referência** do narrador (`/srv/pases/tts-config/vozes/`) |
+| Chatterbox Multilingual **pt-BR** clonando essa voz | MIT (marca d'água Perth) | **aprovada** ("o melhor de todos"), mas com chiado (excesso em 4–8 kHz; corrigido com equalização) e **fins de frase cortados** (22 de 183; reduzidos a 6 com pausa final e regeração) |
+| **VoxCPM2** (OpenBMB) clonando a mesma voz | **Apache 2.0**, sem marca d'água, 48 kHz | **escolhido ouvindo** pelo responsável; sem chiado e sem cortes no teste; "e-mail" lido como **"imêiu"** (grafia escolhida) — **voz atual** |
+| VoiceStudio (app que junta 18 motores) | AGPL; motor padrão OmniVoice **não comercial** | não adotado; dele saiu a indicação do VoxCPM2 |
+
+**Geração (`gerar_voz_voxcpm.py`, `_props.py`, `_menus.py`):** sempre a partir de `narracaoVoz`, **frase por frase** (pausa de 0,25 s); cada frase é transcrita pelo **Whisper** e regerada (até 5 vezes) se a semelhança ficar abaixo de 80 %, se a última palavra não aparecer ou se o fim sair cortado. Resultados: 196, 119 e 124 frases, ~97 % de semelhança média; os alertas restantes são quase todos grafia do reconhecedor (o Whisper não julga nomes inventados como "Árdus").
+
+### Instalações (ambientes próprios, fora do Git)
+`/srv/pases/tts-voxcpm` (VoxCPM2, ~4,6 GiB de modelo no cache do Hugging Face), `/srv/pases/tts-qwen` (Qwen3-TTS CustomVoice e VoiceDesign, ~8,4 GiB), `/srv/pases/tts-chatterbox` (Python 3.14, sem Triton; pacote pt-BR montado em `ckpt-ptbr/`, ~3 GiB) e o Piper com 3 vozes em `/srv/pases/tts/piper-voices` (~190 MB). Todos com PyTorch 2.14 + CUDA 13 (exigido pela 5060 Ti).
 
 ## Escopo restante do capítulo <span class="badge badge-stub">Stub</span>
 
