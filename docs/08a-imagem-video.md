@@ -1130,8 +1130,8 @@ Três vídeos de treinamento do **Ardus** (programa de projeto de móveis) monta
 | Vídeo | Material | Duração (1,25×) | Situação |
 |---|---|---|---|
 | Treinamento completo (v4) — cozinha do zero, abertura + 17 capítulos | `Treinamento-v3` | 21 min 36 s | **aprovado** ("ficou muito bom"; pedido de 1,25×) |
-| "A aba Propriedades em detalhe" — abertura + 12 capítulos | `Treinamento-Propriedades` | 12 min 47 s | entregue |
-| "Os menus em resumo" — abertura + 14 capítulos | `Treinamento-Menus` | 13 min 32 s | **aprovado** ("ficou bom") |
+| "A aba Propriedades em detalhe" — abertura + 12 capítulos | `Treinamento-Propriedades` | 11 min 57 s (v5) | **aprovado** na versão 5 (voz do responsável, música) |
+| "Os menus em resumo" — abertura + 14 capítulos | `Treinamento-Menus` | 13 min 02 s (v5) | **aprovado** na versão 5 (voz do responsável, música) |
 
 ### Montagem (só ffmpeg e Pillow, sem IA de vídeo)
 - **Cenas fiéis:** a tela real, sem nada inventado; vídeo em velocidade normal com o último quadro congelado se a fala for mais longa; **fotos paradas**, e quando o roteiro pede foco, **corte direto** para o detalhe ampliado (o zoom lento foi reprovado: "parece baixo FPS").
@@ -1151,6 +1151,22 @@ Três vídeos de treinamento do **Ardus** (programa de projeto de móveis) monta
 | VoiceStudio (app que junta 18 motores) | AGPL; motor padrão OmniVoice **não comercial** | não adotado; dele saiu a indicação do VoxCPM2 |
 
 **Geração (`gerar_voz_voxcpm.py`, `_props.py`, `_menus.py`):** sempre a partir de `narracaoVoz`, **frase por frase** (pausa de 0,25 s); cada frase é transcrita pelo **Whisper** e regerada (até 5 vezes) se a semelhança ficar abaixo de 80 %, se a última palavra não aparecer ou se o fim sair cortado. Resultados: 196, 119 e 124 frases, ~97 % de semelhança média; os alertas restantes são quase todos grafia do reconhecedor (o Whisper não julga nomes inventados como "Árdus").
+
+### Versão 5 (24/10/2026): voz do responsável, música e mais motion graphics
+Propriedades e Menus refeitos a pedido do responsável ("vá além do que está no roteiro", música "num volume sutil", mais motion graphics "sem exageros"). Saída em `propriedades/voz-propria3/` e `menus/voz-propria3/` (11 min 57 s e 13 min 02 s a 1,25×), **aprovados** pelo responsável em 25/10/2026 ("ficou bom"); as versões anteriores ficaram onde estavam.
+
+- **Voz própria (clonagem sem treino, VoxCPM2):** o pedido foi "treinar o Kokoro com a minha voz"; o Kokoro não clona, e o VoxCPM2 já clona a partir de uma gravação. Três gravações de WhatsApp; a usada é a terceira (os primeiros 59 s, sem a parte do alfabeto). As gravações têm **respiro antes de cada frase** (10–11 por gravação, 33–41 dB abaixo da fala), e a voz clonada os repetia ("percebo um som de respiro a cada frase"). Correção: os respiros da referência são **atenuados** automaticamente (20 ms com energia 20–45 dB abaixo da fala, muitos cruzamentos por zero, 140–700 ms) e o **começo de cada frase gerada é aparado**. O primeiro aparador cortava a consoante inicial (o "F" de "Fica"); o atual acha a primeira vogal forte e volta enquanto ainda há som (acima de pico −50 dB). "QR Code" passou a ser escrito "quiú ár côudis" para essa voz. `gerar_voz_props.py` e `_menus.py --voz propria`; as gravações ficam em `/home/pases/Treinamento-video/voz-propria/`, **fora do Git**.
+- **"Pequeno corte" no começo da fala depois dos cartões:** além do aparador, o `loudnorm` dinâmico subia o ganho aos poucos depois do silêncio do cartão, e a primeira sílaba saía baixa. Agora o ganho é **fixo** por capítulo (mede e aplica até −16 LUFS, com limitador só nos picos).
+- **Motion graphics novos (`extras_v5.py`):**
+    - cartão de capítulo com **"Neste capítulo"**: os temas, tirados do `naTela` das cenas, entram um a um;
+    - **"Capítulo N de M"**: os capítulos anteriores aparecem cheios e o atual vai se enchendo em laranja;
+    - **mapa do treinamento** na abertura, com os capítulos em duas colunas e uma fala curta fora do roteiro;
+    - **cartão de encerramento** com o logo e "Bons projetos!".
+    - A explicação continua fiel ao roteiro.
+- **Música:** **ACE-Step 1.5 turbo** (MIT) pelo ComfyUI (`gerar_trilha.py`), instrumental, 92 bpm, ré maior.
+    - **Seleção:** seis faixas de 3 min (cerca de 9 s cada). Escolhidas as três com volume mais estável; o Whisper confirmou que não há voz. Elas são encadeadas com fusão de 6 s e a trilha segue contínua de um capítulo para o outro.
+    - **Volume:** 21 dB abaixo da voz, abaixando mais quando a voz fala (sidechain); entra e sai em fusão.
+    - **Modelos:** baixados só o modelo turbo, o codificador Qwen 0.6B e o VAE (~6,3 GB em `models/`). O LM de 4B (8,4 GB) não foi baixado: o `DualCLIPLoader` "ace" recebe o 0.6B nos dois campos e `generate_audio_codes=False`. O `CLIPLoader` simples carrega o 0.6B como outro modelo (Anima), e a amostragem falha.
 
 ### Instalações (ambientes próprios, fora do Git)
 `/srv/pases/tts-voxcpm` (VoxCPM2, ~4,6 GiB de modelo no cache do Hugging Face), `/srv/pases/tts-qwen` (Qwen3-TTS CustomVoice e VoiceDesign, ~8,4 GiB), `/srv/pases/tts-chatterbox` (Python 3.14, sem Triton; pacote pt-BR montado em `ckpt-ptbr/`, ~3 GiB) e o Piper com 3 vozes em `/srv/pases/tts/piper-voices` (~190 MB). Todos com PyTorch 2.14 + CUDA 13 (exigido pela 5060 Ti).
