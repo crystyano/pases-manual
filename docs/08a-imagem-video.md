@@ -1105,6 +1105,17 @@ Pedido do responsável: duas histórias divertidas que mostrem que o Texugo **n�
     - cada uma das cinco falas aparece uma vez;
     - a boca do elefante se mexe quase o mesmo tempo que dura cada fala.
 
+**Versão final: v6 (26/10/2026).** Dois pedidos do responsável depois da v5:
+
+1. **"Cara de espanto" quando o elefante dá o banho:** só a cena 2 foi refeita, e o prompt passou a descrever a reação (olhos saltados, queixo caído, juba arrepiada, depois indignação). Das 5 prévias, 3 repetiram falas e uma deixou uma mancha no alto da imagem; ficou a semente 31. Resultado: `Texugo_Bolado_O_Dono_do_Lago_v6.mp4`.
+2. **Elefante em terra na cena 1 e na água na cena 2:** a cena 1 foi refeita (v7) com o elefante dentro d'água. Nela, porém, **o Texugo fala de frente para a câmera, sem olhar para o elefante**, e a provocação perdeu o sentido. O responsável **escolheu a v6** e encerrou as correções.
+
+**Lições para os próximos vídeos:**
+- descrever o cenário e a posição de cada personagem **com as mesmas palavras em todas as cenas**, porque o modelo não sabe o que aconteceu na outra;
+- nas falas dirigidas a outro personagem, dizer **para quem o personagem olha**.
+
+A ficha técnica completa, com todas as versões, fica em `videos/final/O_Dono_do_Lago_v5_receita/FICHA.md`.
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
