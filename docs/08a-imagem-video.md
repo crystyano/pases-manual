@@ -1054,6 +1054,57 @@ Pedido do responsável: duas histórias divertidas que mostrem que o Texugo **n�
 - **"Quem Dá Passagem?" (elefante) foi refeito (v2)** depois da avaliação do responsável ("tem inconsistências"). A revisão quadro a quadro mostrou: o Texugo mudava de corpo (panda de frente, gambá de costas, magro de lado), o bocejo parecia grito de medo, pássaros-fantasma, freada que não aparecia, recuo ambíguo e fala fora do último corte. Correção: **quatro vistas do Texugo como referência** (`frente.jpg`, `direito.jpg`, `esquerdo.jpg`, `traseiro.jpg`), o bocejo virou **sentar e coçar a orelha**, freada como cena própria, o elefante **dá meia-volta**, fala só no fim. Uma prévia inventou **letreiros falsos na imagem**. Final: `videos/final/Texugo_Bolado_Quem_Da_Passagem_v2.mp4`.
 - **Lições novas:** usar **todas as vistas do personagem** como referência (o modelo inventa as costas se só vê a frente); conferir também **texto inventado na imagem**; o personagem não "vence" forças da natureza.
 
+**Histórias 3 e 4, com música (25/10/2026).** Baseadas em dois vídeos do YouTube enviados pelo responsável: um texugo encara dois ursos; outro provoca um elefante e leva um "chute". Nova diretriz do responsável: **o Texugo é para todas as idades**, então sem palavrões e sem violência. Os dois vídeos de referência mostram contato físico, e ele virou uma **ameaça sem contato**.
+
+- **"Chegaram Atrasados":** dois ursos querem o favo de mel do Texugo. Ele ruge, os ursos pulam para trás e ele engole o favo inteiro.
+- **"A Lagoa É Minha!":** a mordida e o chute viraram uma **pisada no chão** do elefante, cujo vento leva o Texugo rolando, tonto mas sem se machucar. Aqui o Texugo leva a pior: é destemido, mas não é mais forte que tudo.
+- **Mesma receita das anteriores:**
+    - personagem novo com referência própria: o urso, feito no FLUX.2 klein;
+    - quatro vistas do Texugo como referência;
+    - prévias a 480p e final a 736×1312.
+- **Escala dos personagens:** cinco quadros foram refeitos porque o Texugo saía do tamanho dos ursos e do elefante. O prompt passou a dizer explicitamente que ele é minúsculo e em que lado do quadro cada personagem fica.
+- **Fala inventada (problema novo):** na lagoa, as quatro gerações inventaram uma fala de "narrador" no começo, mesmo com "boca fechada até o último corte" no prompt. No final, o áudio original desses trechos foi **zerado** e a música cobre o buraco.
+- **Música:** **ACE-Step 1.5** (8A.15): três trilhas cômicas de desenho animado por história, sem voz.
+    - **Volume:** 14 dB abaixo do áudio do vídeo, abaixando quando há fala ou efeito.
+    - **Saída:** normalizada a −14 LUFS (padrão de redes sociais).
+    - **Script:** `scripts/misturar_musica.py`, que também zera os trechos de fala inventada.
+- **Quadrinhos:** páginas e carrosséis em `paginas/3-chegaram-atrasados*` e `paginas/4-a-lagoa-e-minha*`.
+- **Vídeos:** `videos/final/Texugo_Bolado_Chegaram_Atrasados.mp4` e `Texugo_Bolado_A_Lagoa_E_Minha.mp4`.
+- A restrição de licença do H3 para publicação (8A.14) continua valendo.
+
+**Três vídeos de 20 s com diálogo, de roteiros do responsável (26/10/2026).** "Os vídeos estão visualmente muito bons, mas falta diversidade": o responsável mandou três roteiros com conversa entre os personagens, "O Dono do Lago", "Só um Pedacinho" e "Passagem Bloqueada".
+
+- **Vozes novas:** elefante, urso sério e urso literal, criadas por descrição no Qwen3-TTS VoiceDesign, com tons bem separados do Texugo.
+- **Duração:** cada vídeo são duas gerações do H3 de 9 a 11 s, emendadas num corte seco.
+- **Problema:** o H3 com várias vozes de referência **inventa fala nos silêncios do roteiro**, ou repete a fala da referência do Texugo. Isso confirma a regra do Cap. 8A.13: a fala precisa ocupar o clipe. Numa prévia ele também escreveu "GOSTEI" na tela.
+- **Solução:** gerar antes a **trilha de diálogo exata** e passá-la como **único áudio de referência** do H3.
+    - `scripts/dialogo.py` gera cada fala no VoxCPM2, clonando a voz do personagem; o Whisper confere cada uma e o script a coloca no tempo do roteiro.
+    - Com essa trilha, o H3 põe cada fala na boca certa e respeita os silêncios.
+    - Sobrou uma repetição ou um trecho sem sentido por vídeo, zerado na mixagem. A transcrição final bate com os três roteiros, fala por fala.
+- **Sem contato:** a migalha cai na pata do urso; o urso pega o favo do chão; o elefante levanta o galho sem tocar no Texugo.
+- **Trilha:** ACE-Step, como nos vídeos anteriores.
+
+**"O Dono do Lago" v5: primeiro vídeo aprovado como "realmente bom" (26/10/2026).** O responsável escolheu este episódio como "o mais promissor dos 3 para ser o primeiro vídeo a ser realmente usado" e pediu mais esforço nele. Ficha completa e cópia de todos os arquivos usados em `videos/final/O_Dono_do_Lago_v5_receita/` (`FICHA.md`).
+
+- **Resultado:** 17 s, 736×1312, 24 fps, H.264 + AAC 48 kHz, −14,8 LUFS. São duas cenas contínuas de 7 s e 10 s.
+- **Imagem:** H3 `ref2va`, 4 passos.
+    - Sementes: 31 na parte 1 e 23 na parte 2, escolhidas entre 4 e 5 prévias a 480p.
+    - Referências: as quatro vistas do Texugo e o elefante.
+    - Áudio de referência: **somente a trilha de diálogo exata** da cena.
+- **Vozes:** o Texugo é clonado no VoxCPM2 a partir de uma referência de 9,6 s, com três falas já aprovadas.
+    - Clonando, o VoxCPM2 transformava as perguntas do elefante em afirmações em todas as mais de 30 tentativas.
+    - O elefante foi feito no **Qwen3-TTS VoiceDesign**, com **as duas perguntas numa só tomada**, o que mantém o mesmo timbre. A entonação sobe 36% e 57% no fim.
+- **Erros corrigidos no caminho:**
+    - Picotar em seis tomadas (v2) ficou pior: o personagem mudava de tamanho e apareceram brilhos, pássaros e artefatos.
+    - Silêncios longos fazem o H3 repetir falas; por isso a parte 1 foi encurtada para 7 s.
+    - O responsável notou falta de sincronismo na fala do elefante. Os tempos do Whisper erravam até 1,2 s, e agora as falas limpas entram no instante em que o H3 falou, **medido pela energia do áudio** (os lábios seguem esse áudio).
+    - O responsável sentiu falta do som da água. Ao tirar todo o áudio do H3, ele tinha sumido; voltou o ambiente original fora das falas, com a água realçada em +12 dB.
+- **Música:** ACE-Step 1.5, 14 dB abaixo da cena, com sidechain.
+- **Controle:**
+    - quadros conferidos a cada 0,25 s, sem texto, símbolos, pássaros ou brilhos;
+    - cada uma das cinco falas aparece uma vez;
+    - a boca do elefante se mexe quase o mesmo tempo que dura cada fala.
+
 ## 8A.14 MiniMax H3: licença, instalação e testes <span class="badge badge-existe">Existe — 15/10/2026</span>
 
 ### O modelo (fontes oficiais: blog, GitHub e Hugging Face da MiniMax)
